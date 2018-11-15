@@ -1,4 +1,4 @@
-package com.dovar.dovatoast;
+package com.dovar.dovatoast.lib;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
@@ -8,6 +8,8 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+
+import com.dovar.dovatoast.R;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

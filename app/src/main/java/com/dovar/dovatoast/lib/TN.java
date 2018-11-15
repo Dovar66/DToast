@@ -1,4 +1,4 @@
-package com.dovar.dovatoast;
+package com.dovar.dovatoast.lib;
 
 import android.content.Context;
 import android.os.Handler;

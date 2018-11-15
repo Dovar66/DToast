@@ -12,3 +12,6 @@
  * 红米6pro-MIUI9（两个同时展示）、
  * 荣耀5C-android6.0（两个TOAST排队先后显示）、
  * 荣耀5C-android7.0（contentView不同时只看到展示第一个，相同时只看到展示第二个）
+
+## TODO LIST:
+    *考虑是否对Toast增加优先级属性，优先级高的Toast优先置于待处理队列的头部。
