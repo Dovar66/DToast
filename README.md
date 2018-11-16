@@ -174,7 +174,7 @@ TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windo
 为了解决上面的第一和第二个问题，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，
 绕过NMS就无法获取到有效的windowToken，于是就掉进第四个问题里了。
 除了去获取悬浮窗权限，改用TYPE_PHONE等类型，我暂时还没有找到其他更好的解决方法。但悬浮窗权限往往不容易获取，
-所以目前的DovaToast妥协之后是这样做的：
+所以目前的DovaToast暂时是这样做的：
 
     在捕获到token null is not valid异常时，改用解决了问题三的系统Toast去展示。
 
