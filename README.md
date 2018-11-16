@@ -12,9 +12,9 @@
 
 ## 问题一：关闭通知权限时Toast不显示
 
-    看下方Toast源码中的show()方法，通过AIDL获取到INotificationManager，并将接下来的显示流程控制权交给NotificationManagerService。
-    NMS中会对Toast进行权限校验，当通知权限校验不通过时，Toast将不做展示。当然不同ROM中NMS可能会有不同，
-    比如MIUI就对这部分内容进行了修改，所以小米手机关闭通知权限不会导致Toast不显示。
+    看下方Toast源码中的show()方法，通过AIDL获取到INotificationManager，并将接下来的显示流程控制权
+    交给NotificationManagerService。NMS中会对Toast进行权限校验，当通知权限校验不通过时，Toast将不做展示。
+    当然不同ROM中NMS可能会有不同，比如MIUI就对这部分内容进行了修改，所以小米手机关闭通知权限不会导致Toast不显示。
 
       /**
          * Show the view for the specified duration.
@@ -49,12 +49,15 @@
             * 荣耀5C-android6.0（第一个TOAST展示完成后，第二个才开始展示）、
             * 荣耀5C-android7.0（只看到展示第一个Toast）
 
-造成这个问题的原因应该是各大ROM中NMS维护Toast队列的逻辑有差异。同样的，DovaToast内部也维护着自己的队列逻辑，保证在所有手机上使用DovaToast的效果相同。
+造成这个问题的原因应该是各大ROM中NMS维护Toast队列的逻辑有差异。
+同样的，DovaToast内部也维护着自己的队列逻辑，保证在所有手机上使用DovaToast的效果相同。
 
 ## 问题三：Toast的BadTokenException问题
 
-Toast有个内部类（TN extends ITransientNotification.Stub），调用Toast.show()会将TN传递给NMS，在NMS中会生成一个windowToken，并将windowToken传给WindowManagerService，WMS会暂时保存该token并用于之后的校验，
-然后NMS通过调用TN.show(windowToken)传递token给TN，TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windowToken)。
+Toast有个内部类（TN extends ITransientNotification.Stub），调用Toast.show()会将TN传递给NMS，在NMS中会生成一个windowToken，
+并将windowToken传给WindowManagerService，WMS会暂时保存该token并用于之后的校验，
+然后NMS通过调用TN.show(windowToken)传递token给TN，
+TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windowToken)。
 
             /**
              * schedule handleShow into the right thread
@@ -168,8 +171,9 @@ Toast有个内部类（TN extends ITransientNotification.Stub），调用Toast.s
                                     + mWindowAttributes.type + " is not valid");
                     }
 
-为了解决上面的第一和第二个问题，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，绕过NMS就无法获取到有效的windowToken，
-于是就掉进第四个问题里了。除了去获取悬浮窗权限，改用TYPE_PHONE等类型，我暂时还没有找到其他更好的解决方法。但悬浮窗权限往往不容易获取，
+为了解决上面的第一和第二个问题，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，
+绕过NMS就无法获取到有效的windowToken，于是就掉进第四个问题里了。
+除了去获取悬浮窗权限，改用TYPE_PHONE等类型，我暂时还没有找到其他更好的解决方法。但悬浮窗权限往往不容易获取，
 所以目前的DovaToast妥协之后是这样做的：
 
     在捕获到token null is not valid异常时，改用解决了问题三的系统Toast去展示。
