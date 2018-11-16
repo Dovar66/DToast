@@ -33,13 +33,12 @@ public class DovaToast implements Cloneable {
     int duration = DURATION_SHORT;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({DURATION_SHORT, DURATION_MEDIUM, DURATION_LONG})
+    @IntDef({DURATION_SHORT, DURATION_LONG})
     public @interface Duration {
     }
 
     public static final int DURATION_SHORT = 2000;
-    public static final int DURATION_MEDIUM = 3000;
-    public static final int DURATION_LONG = 4000;
+    public static final int DURATION_LONG = 3500;
 
     public DovaToast(@NonNull Context mContext) {
         this.mContext = mContext;
@@ -125,6 +124,10 @@ public class DovaToast implements Cloneable {
     public DovaToast setGravity(int gravity) {
         this.gravity = gravity;
         return this;
+    }
+
+    public int getGravity() {
+        return gravity;
     }
 
     public int getXOffset() {

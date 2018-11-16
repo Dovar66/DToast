@@ -6,8 +6,12 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewManager;
+import android.view.ViewParent;
 import android.view.WindowManager;
+import android.widget.Toast;
 
+import java.lang.reflect.Field;
 import java.util.LinkedList;
 
 /**
@@ -141,14 +145,33 @@ public class TN extends Handler {
             if (windowManager != null) {
                 View toastView = toast.getView();
                 if (toastView != null) {
+                    //从父容器中移除contentView
+                    ViewParent parent = toastView.getParent();
+                    if (parent instanceof ViewManager) {
+                        ((ViewManager) parent).removeView(toastView);
+                    }
+                    //再将contentView添加到WindowManager
                     try {
                         windowManager.addView(toastView, toast.getWMParams());
                     } catch (Exception e) {
                         e.printStackTrace();
-                        // TODO: 2018/11/13
-                        //多TYPE_TOAST窗口同时展示时在7.1以上版本会抛出异常
+                        //Android从7.1版本开始，Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于权限校验才允许添加。
+                        //Toast源码在7.1及以上也有了变化，Toast的WindowManager.LayoutParams参数额外添加了一个token属性，它是在NMS中被初始化的，用于对添加的窗口类型进行校验
+                        //7.1以上版本不允许同时展示多个TYPE_TOAST窗口，第二个TYPE_TOAST的WindowManager.addView()会抛出异常
                         //此时可考虑使用系统Toast
                         Log.d("DovaToast", "displayToast: windowManager.addView Error!");
+                        if (e.getMessage() != null && e.getMessage().contains("token null is not valid")) {
+                            Toast mToast = new Toast(toast.getContext());
+                            hook(mToast);
+                            mToast.setView(toastView);
+                            if (toast.getDuration() == DovaToast.DURATION_SHORT) {
+                                mToast.setDuration(Toast.LENGTH_SHORT);
+                            } else if (toast.getDuration() == DovaToast.DURATION_LONG) {
+                                mToast.setDuration(Toast.LENGTH_LONG);
+                            }
+                            mToast.setGravity(toast.getGravity(), toast.getXOffset(), toast.getYOffset());
+                            mToast.show();
+                        }
                     }
 
                     //展示到时间后移除
@@ -181,5 +204,21 @@ public class TN extends Handler {
     private WindowManager getWMManager(DovaToast toast) {
         if (toast == null || toast.getContext() == null) return null;
         return (WindowManager) toast.getContext().getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+    }
+
+    //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
+    private void hook(Toast toast) {
+        try {
+            Field sField_TN = Toast.class.getDeclaredField("mTN");
+            sField_TN.setAccessible(true);
+            Field sField_TN_Handler = sField_TN.getType().getDeclaredField("mHandler");
+            sField_TN_Handler.setAccessible(true);
+
+            Object tn = sField_TN.get(toast);
+            Handler preHandler = (Handler) sField_TN_Handler.get(tn);
+            sField_TN_Handler.set(tn, new SafelyHandlerWrapper(preHandler));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
