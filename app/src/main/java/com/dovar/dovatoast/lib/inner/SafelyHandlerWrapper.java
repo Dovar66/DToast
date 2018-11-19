@@ -1,4 +1,4 @@
-package com.dovar.dovatoast.lib;
+package com.dovar.dovatoast.lib.inner;
 
 import android.os.Handler;
 import android.os.Message;

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.dovar.dovatoast.R;
+import com.dovar.dovatoast.lib.inner.TN;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,12 +24,13 @@ public class DovaToast implements Cloneable {
 
     private Context mContext;
     private View contentView;
-    private int animation;
+    private int animation = android.R.style.Animation_Toast;
     private int gravity = Gravity.BOTTOM | Gravity.CENTER;
     private int xOffset;
     private int yOffset;
     private int width = WindowManager.LayoutParams.WRAP_CONTENT;
     private int height = WindowManager.LayoutParams.WRAP_CONTENT;
+    private int priority;//优先级
     private @Duration
     int duration = DURATION_SHORT;
 
@@ -47,7 +49,7 @@ public class DovaToast implements Cloneable {
         this.contentView = layoutInflater.inflate(R.layout.layout_toast, null);
     }
 
-    protected WindowManager.LayoutParams getWMParams() {
+    public WindowManager.LayoutParams getWMParams() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.format = PixelFormat.TRANSLUCENT;
@@ -61,6 +63,20 @@ public class DovaToast implements Cloneable {
         } else {*/
         lp.type = WindowManager.LayoutParams.TYPE_TOAST;
 //        }
+
+        /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
+            mWM = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            mParams.type = WindowManager.LayoutParams.TYPE_TOAST;
+            mParams.y = mToast.getYOffset();
+        } else {
+            Context topActivityOrApp = Utils.getTopActivityOrApp();
+            if (topActivityOrApp instanceof Activity) {
+                mWM = ((Activity) topActivityOrApp).getWindowManager();
+            }
+            mParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
+            mParams.y = mToast.getYOffset() + getNavBarHeight();
+        }*/
+
         lp.height = this.height;
         lp.width = this.width;
         lp.windowAnimations = this.animation;
@@ -87,8 +103,9 @@ public class DovaToast implements Cloneable {
         return this.mContext;
     }
 
-    public void setView(View mView) {
+    public DovaToast setView(View mView) {
         this.contentView = mView;
+        return this;
     }
 
     public View getView() {
@@ -122,8 +139,7 @@ public class DovaToast implements Cloneable {
     }
 
     public DovaToast setGravity(int gravity) {
-        this.gravity = gravity;
-        return this;
+        return setGravity(gravity, 0, 0);
     }
 
     public int getGravity() {
@@ -138,6 +154,15 @@ public class DovaToast implements Cloneable {
         return this.yOffset;
     }
 
+    public int getPriority() {
+        return priority;
+    }
+
+    public DovaToast setPriority(int mPriority) {
+        this.priority = mPriority;
+        return this;
+    }
+
     /**
      * Toast引用的contentView的可见性
      *
@@ -148,7 +173,7 @@ public class DovaToast implements Cloneable {
     }
 
     @Override
-    protected DovaToast clone() {
+    public DovaToast clone() {
         DovaToast mToast = null;
         try {
             mToast = (DovaToast) super.clone();
@@ -161,6 +186,7 @@ public class DovaToast implements Cloneable {
             mToast.width = this.width;
             mToast.xOffset = this.xOffset;
             mToast.yOffset = this.yOffset;
+            mToast.priority = this.priority;
         } catch (CloneNotSupportedException mE) {
             mE.printStackTrace();
         }

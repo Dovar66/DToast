@@ -181,3 +181,18 @@ TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windo
 ## TODO LIST:
 
     *考虑是否对Toast增加优先级属性，优先级高的Toast优先置于待处理队列的头部。
+    *多个弹窗连续出现时：
+        1.相同优先级时，会终止上一个，直接展示后一个；
+        2.不同优先级时，如果后一个的优先级更高则会终止上一个，直接展示后一个。
+
+1．WindowToken的意义
+
+为了搞清晰WindowToken的作用是什么。看一下其位于WindowToken.java中的定义。尽管它未定义不论什么函数，但其成员变量的意义却非常重要。
+
+ ·  WindowToken将属于同一个应用组件的窗体组织在了一起。所谓的应用组件能够是Activity、InputMethod、Wallpaper以及Dream。在WMS对窗体的管理过程中，用WindowToken指代一个应用组件。比如在进行窗体ZOrder排序时。属于同一个WindowToken的窗体会被安排在一起，而且在当中定义的一些属性将会影响全部属于此WindowToken的窗体。这些都表明了属于同一个WindowToken的窗体之间的紧密联系。
+
+ ·  WindowToken具有令牌的作用，是相应用组件的行为进行规范管理的一个手段。
+
+WindowToken由应用组件或其管理者负责向WMS声明并持有。应用组件在须要新的窗体时。必须提供WindowToken以表明自己的身份，而且窗体的类型必须与所持有的WindowToken的类型一致。
+
+从上面的代码能够看到，在创建系统类型的窗体时不须要提供一个有效的Token，WMS会隐式地为其声明一个WindowToken，看起来谁都能够加入个系统级的窗体。难道Android为了内部使用方便而置安全于不顾吗？非也。addWindow()函数一開始的mPolicy.checkAddPermission()的目的就是如此。它要求client必须拥有SYSTEM_ALERT_WINDOW或INTERNAL_SYSTEM_WINDOW权限才干创建系统类型的窗体。
