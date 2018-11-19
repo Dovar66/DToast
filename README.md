@@ -44,7 +44,7 @@
 
      我找了四台设备，创建两个Gravity不同的Toast并调用show()方法,结果出现了四种展示效果：
 
-            * 小米8-MIUI10（只看到展示第二个Toast,因为新的Toast会将正在展示的Toast取消）、
+            * 小米8-MIUI10（只看到展示第二个Toast）、
             * 红米6pro-MIUI9（两个Toast同时展示）、
             * 荣耀5C-android6.0（第一个TOAST展示完成后，第二个才开始展示）、
             * 荣耀5C-android7.0（只看到展示第一个Toast）
@@ -176,7 +176,7 @@ TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windo
 除了去获取悬浮窗权限，改用TYPE_PHONE等类型，我暂时还没有找到其他更好的解决方法。但悬浮窗权限往往不容易获取，
 所以目前的DovaToast暂时是这样做的：
 
-    在捕获到token null is not valid异常时，改用解决了问题三的系统Toast去展示。
+    在捕获到token null is not valid异常时，改用系统Toast去展示，当然这里会先对系统Toast进行封装修改，以解决问题二和问题三。
 
 ## TODO LIST:
 
