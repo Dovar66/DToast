@@ -2,13 +2,15 @@
 
 使用系统Toast存在的问题
 
-    1.当通知权限被关闭时在华为等手机上Toast不显示；（本项目已解决）
+    1.当通知权限被关闭时在华为等手机上Toast不显示；
 
-    2.系统Toast的队列机制在不同手机上可能会不相同；（本项目已解决）
+    2.Toast的队列机制在不同手机上可能会不相同；
 
-    3.系统Toast的BadTokenException问题；（本项目已解决）
+    3.Toast的BadTokenException问题；
 
-    4.Android7.1之后的token null is not valid问题。(捕获处理)
+    4.Android8.0之后的token null is not valid问题；
+
+    5.Android7.1之后，不允许同时展示两个TYPE_TOAST弹窗(实测部分机型才会)。(仅捕获异常，暂未处理，属于特殊场景需求)。
 
 ## 问题一：关闭通知权限时Toast不显示
 
@@ -44,20 +46,91 @@
 
      我找了四台设备，创建两个Gravity不同的Toast并调用show()方法,结果出现了四种展示效果：
 
-            * 小米8-MIUI10（只看到展示第二个Toast）、
-            * 红米6pro-MIUI9（两个Toast同时展示）、
-            * 荣耀5C-android6.0（第一个TOAST展示完成后，第二个才开始展示）、
             * 荣耀5C-android7.0（只看到展示第一个Toast）
+            * 小米8-MIUI10（只看到展示第二个Toast，即新的Toast.show会中止当前Toast的展示）
+            * 红米6pro-MIUI9（两个Toast同时展示）
+            * 荣耀5C-android6.0（第一个TOAST展示完成后，第二个才开始展示）
 
 造成这个问题的原因应该是各大ROM中NMS维护Toast队列的逻辑有差异。
 同样的，DovaToast内部也维护着自己的队列逻辑，保证在所有手机上使用DovaToast的效果相同。
 
+     *DovaToast中多个弹窗连续出现时：
+            1.相同优先级时，会终止上一个，直接展示后一个；
+            2.不同优先级时，如果后一个的优先级更高则会终止上一个，直接展示后一个。
+
 ## 问题三：Toast的BadTokenException问题
 
-Toast有个内部类（TN extends ITransientNotification.Stub），调用Toast.show()会将TN传递给NMS，在NMS中会生成一个windowToken，
-并将windowToken传给WindowManagerService，WMS会暂时保存该token并用于之后的校验，
-然后NMS通过调用TN.show(windowToken)传递token给TN，
-TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windowToken)。
+* Toast有个内部类 TN（extends ITransientNotification.Stub），调用Toast.show()时会将TN传递给NMS；
+
+        public void show() {
+            if (mNextView == null) {
+                throw new RuntimeException("setView must have been called");
+            }
+            INotificationManager service = getService();
+            String pkg = mContext.getOpPackageName();
+            TN tn = mTN;
+            tn.mNextView = mNextView;
+            try {
+                service.enqueueToast(pkg, tn, mDuration);
+            } catch (RemoteException e) {
+                // Empty
+            }
+        }
+
+* 在NMS中会生成一个windowToken，并将windowToken给到WindowManagerService，WMS会暂时保存该token并用于之后的校验；
+
+NotificationManagerService.java  #enqueueToast源码：
+
+            synchronized (mToastQueue) {
+                int callingPid = Binder.getCallingPid();
+                long callingId = Binder.clearCallingIdentity();
+                try {
+                    ToastRecord record;
+                    int index = indexOfToastLocked(pkg, callback);
+                    // If it's already in the queue, we update it in place, we don't
+                    // move it to the end of the queue.
+                    if (index >= 0) {
+                        record = mToastQueue.get(index);
+                        record.update(duration);
+                    } else {
+                        // Limit the number of toasts that any given package except the android
+                        // package can enqueue.  Prevents DOS attacks and deals with leaks.
+                        if (!isSystemToast) {
+                            int count = 0;
+                            final int N = mToastQueue.size();
+                            for (int i=0; i<N; i++) {
+                                 final ToastRecord r = mToastQueue.get(i);
+                                 if (r.pkg.equals(pkg)) {
+                                     count++;
+                                     if (count >= MAX_PACKAGE_NOTIFICATIONS) {
+                                         Slog.e(TAG, "Package has already posted " + count
+                                                + " toasts. Not showing more. Package=" + pkg);
+                                         return;
+                                     }
+                                 }
+                            }
+                        }
+
+                        Binder token = new Binder();//生成一个token
+                        mWindowManagerInternal.addWindowToken(token, TYPE_TOAST, DEFAULT_DISPLAY);
+                        record = new ToastRecord(callingPid, pkg, callback, duration, token);
+                        mToastQueue.add(record);
+                        index = mToastQueue.size() - 1;
+                        keepProcessAliveIfNeededLocked(callingPid);
+                    }
+                    // If it's at index 0, it's the current toast.  It doesn't matter if it's
+                    // new or just been updated.  Call back and tell it to show itself.
+                    // If the callback fails, this will remove it from the list, so don't
+                    // assume that it's valid after this.
+                    if (index == 0) {
+                        showNextToastLocked();
+                    }
+                } finally {
+                    Binder.restoreCallingIdentity(callingId);
+                }
+            }
+
+* 然后NMS通过调用TN.show(windowToken)回传token给TN；
 
             /**
              * schedule handleShow into the right thread
@@ -68,7 +141,74 @@ TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windo
                 mHandler.obtainMessage(SHOW, windowToken).sendToTarget();
             }
 
-当WindowManager收到addView请求后会检查当前窗口的token是否有效，若有效则添加窗口展示，否则抛出BadTokenException异常.
+* TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windowToken)；
+
+    在API25的源码中，Toast的WindowManager.LayoutParams参数新增了一个token属性，用于对添加的窗口进行校验。
+
+![](assets/15427028677888.png)
+
+* 当param.token为空时，WindowManagerImpl会为其设置 DefaultToken；
+
+        @Override
+        public void addView(@NonNull View view, @NonNull ViewGroup.LayoutParams params) {
+            applyDefaultToken(params);
+            mGlobal.addView(view, params, mContext.getDisplay(), mParentWindow);
+        }
+
+        private void applyDefaultToken(@NonNull ViewGroup.LayoutParams params) {
+            // Only use the default token if we don't have a parent window.
+            if (mDefaultToken != null && mParentWindow == null) {
+                if (!(params instanceof WindowManager.LayoutParams)) {
+                    throw new IllegalArgumentException("Params must be WindowManager.LayoutParams");
+                }
+                // Only use the default token if we don't already have a token.
+                final WindowManager.LayoutParams wparams = (WindowManager.LayoutParams) params;
+                if (wparams.token == null) {
+                    wparams.token = mDefaultToken;
+                }
+            }
+        }
+
+* 当WindowManager收到addView请求后会检查 mParams.token 是否有效，若有效则添加窗口展示，否则抛出BadTokenException异常.
+
+                  switch (res) {
+                      case WindowManagerGlobal.ADD_BAD_APP_TOKEN:
+                      case WindowManagerGlobal.ADD_BAD_SUBWINDOW_TOKEN:
+                          throw new WindowManager.BadTokenException(
+                                  "Unable to add window -- token " + attrs.token
+                                  + " is not valid; is your activity running?");
+                      case WindowManagerGlobal.ADD_NOT_APP_TOKEN:
+                          throw new WindowManager.BadTokenException(
+                                  "Unable to add window -- token " + attrs.token
+                                  + " is not for an application");
+                      case WindowManagerGlobal.ADD_APP_EXITING:
+                          throw new WindowManager.BadTokenException(
+                                  "Unable to add window -- app for token " + attrs.token
+                                  + " is exiting");
+                      case WindowManagerGlobal.ADD_DUPLICATE_ADD:
+                          throw new WindowManager.BadTokenException(
+                                  "Unable to add window -- window " + mWindow
+                                  + " has already been added");
+                      case WindowManagerGlobal.ADD_STARTING_NOT_NEEDED:
+                          // Silently ignore -- we would have just removed it
+                          // right away, anyway.
+                          return;
+                      case WindowManagerGlobal.ADD_MULTIPLE_SINGLETON:
+                          throw new WindowManager.BadTokenException("Unable to add window "
+                                  + mWindow + " -- another window of type "
+                                  + mWindowAttributes.type + " already exists");
+                      case WindowManagerGlobal.ADD_PERMISSION_DENIED:
+                          throw new WindowManager.BadTokenException("Unable to add window "
+                                  + mWindow + " -- permission denied for window type "
+                                  + mWindowAttributes.type);
+                      case WindowManagerGlobal.ADD_INVALID_DISPLAY:
+                          throw new WindowManager.InvalidDisplayException("Unable to add window "
+                                  + mWindow + " -- the specified display can not be found");
+                      case WindowManagerGlobal.ADD_INVALID_TYPE:
+                          throw new WindowManager.InvalidDisplayException("Unable to add window "
+                                  + mWindow + " -- the specified window type "
+                                  + mWindowAttributes.type + " is not valid");
+                  }
 
 什么情况下windowToken会失效？
 
@@ -128,71 +268,121 @@ TN使用该token尝试向WindowManager中添加Toast视图(mParams.token = windo
                  impl.handleMessage(msg);//需要委托给原Handler执行
              }
          }
-## 问题四：Android7.1之后的token null is not valid问题
-从Android7.1开始，Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于校验。
-在API25的源码中，Toast的WindowManager.LayoutParams参数新增了一个token属性，用于对添加的窗口进行校验。
+## 问题四：Android8.0之后的token null is not valid问题
 
-                    switch (res) {
-                        case WindowManagerGlobal.ADD_BAD_APP_TOKEN:
-                        case WindowManagerGlobal.ADD_BAD_SUBWINDOW_TOKEN:
-                            throw new WindowManager.BadTokenException(
-                                    "Unable to add window -- token " + attrs.token
-                                    + " is not valid; is your activity running?");
-                        case WindowManagerGlobal.ADD_NOT_APP_TOKEN:
-                            throw new WindowManager.BadTokenException(
-                                    "Unable to add window -- token " + attrs.token
-                                    + " is not for an application");
-                        case WindowManagerGlobal.ADD_APP_EXITING:
-                            throw new WindowManager.BadTokenException(
-                                    "Unable to add window -- app for token " + attrs.token
-                                    + " is exiting");
-                        case WindowManagerGlobal.ADD_DUPLICATE_ADD:
-                            throw new WindowManager.BadTokenException(
-                                    "Unable to add window -- window " + mWindow
-                                    + " has already been added");
-                        case WindowManagerGlobal.ADD_STARTING_NOT_NEEDED:
-                            // Silently ignore -- we would have just removed it
-                            // right away, anyway.
-                            return;
-                        case WindowManagerGlobal.ADD_MULTIPLE_SINGLETON:
-                            throw new WindowManager.BadTokenException("Unable to add window "
-                                    + mWindow + " -- another window of type "
-                                    + mWindowAttributes.type + " already exists");
-                        case WindowManagerGlobal.ADD_PERMISSION_DENIED:
-                            throw new WindowManager.BadTokenException("Unable to add window "
-                                    + mWindow + " -- permission denied for window type "
-                                    + mWindowAttributes.type);
-                        case WindowManagerGlobal.ADD_INVALID_DISPLAY:
-                            throw new WindowManager.InvalidDisplayException("Unable to add window "
-                                    + mWindow + " -- the specified display can not be found");
-                        case WindowManagerGlobal.ADD_INVALID_TYPE:
-                            throw new WindowManager.InvalidDisplayException("Unable to add window "
-                                    + mWindow + " -- the specified window type "
-                                    + mWindowAttributes.type + " is not valid");
-                    }
+Android8.0后Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于校验。
 
-为了解决上面的第一和第二个问题，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，
+API25：（PhoneWindowManager.java源码）
+
+    public int checkAddPermission(WindowManager.LayoutParams attrs, int[] outAppOp) {
+        int type = attrs.type;
+
+        outAppOp[0] = AppOpsManager.OP_NONE;
+
+        if (!((type >= FIRST_APPLICATION_WINDOW && type <= LAST_APPLICATION_WINDOW)
+                || (type >= FIRST_SUB_WINDOW && type <= LAST_SUB_WINDOW)
+                || (type >= FIRST_SYSTEM_WINDOW && type <= LAST_SYSTEM_WINDOW))) {
+            return WindowManagerGlobal.ADD_INVALID_TYPE;
+        }
+
+        if (type < FIRST_SYSTEM_WINDOW || type > LAST_SYSTEM_WINDOW) {
+            // Window manager will make sure these are okay.
+            return WindowManagerGlobal.ADD_OKAY;
+        }
+        String permission = null;
+        switch (type) {
+            case TYPE_TOAST:
+                // XXX right now the app process has complete control over
+                // this...  should introduce a token to let the system
+                // monitor/control what they are doing.
+                outAppOp[0] = AppOpsManager.OP_TOAST_WINDOW;
+                break;
+            case TYPE_DREAM:
+            case TYPE_INPUT_METHOD:
+            case TYPE_WALLPAPER:
+            case TYPE_PRIVATE_PRESENTATION:
+            case TYPE_VOICE_INTERACTION:
+            case TYPE_ACCESSIBILITY_OVERLAY:
+            case TYPE_QS_DIALOG:
+                // The window manager will check these.
+                break;
+            case TYPE_PHONE:
+            case TYPE_PRIORITY_PHONE:
+            case TYPE_SYSTEM_ALERT:
+            case TYPE_SYSTEM_ERROR:
+            case TYPE_SYSTEM_OVERLAY:
+                permission = android.Manifest.permission.SYSTEM_ALERT_WINDOW;
+                outAppOp[0] = AppOpsManager.OP_SYSTEM_ALERT_WINDOW;
+                break;
+            default:
+                permission = android.Manifest.permission.INTERNAL_SYSTEM_WINDOW;
+        }
+        if (permission != null) {
+            ...
+        }
+        return WindowManagerGlobal.ADD_OKAY;
+    }
+
+API26：（PhoneWindowManager.java源码）
+
+    public int checkAddPermission(WindowManager.LayoutParams attrs, int[] outAppOp) {
+        int type = attrs.type;
+
+        outAppOp[0] = AppOpsManager.OP_NONE;
+
+        if (!((type >= FIRST_APPLICATION_WINDOW && type <= LAST_APPLICATION_WINDOW)
+                || (type >= FIRST_SUB_WINDOW && type <= LAST_SUB_WINDOW)
+                || (type >= FIRST_SYSTEM_WINDOW && type <= LAST_SYSTEM_WINDOW))) {
+            return WindowManagerGlobal.ADD_INVALID_TYPE;
+        }
+
+        if (type < FIRST_SYSTEM_WINDOW || type > LAST_SYSTEM_WINDOW) {
+            // Window manager will make sure these are okay.
+            return ADD_OKAY;
+        }
+
+        if (!isSystemAlertWindowType(type)) {
+            switch (type) {
+                case TYPE_TOAST:
+                    // Only apps that target older than O SDK can add window without a token, after
+                    // that we require a token so apps cannot add toasts directly as the token is
+                    // added by the notification system.
+                    // Window manager does the checking for this.
+                    outAppOp[0] = OP_TOAST_WINDOW;
+                    return ADD_OKAY;
+                case TYPE_DREAM:
+                case TYPE_INPUT_METHOD:
+                case TYPE_WALLPAPER:
+                case TYPE_PRESENTATION:
+                case TYPE_PRIVATE_PRESENTATION:
+                case TYPE_VOICE_INTERACTION:
+                case TYPE_ACCESSIBILITY_OVERLAY:
+                case TYPE_QS_DIALOG:
+                    // The window manager will check these.
+                    return ADD_OKAY;
+            }
+            return mContext.checkCallingOrSelfPermission(INTERNAL_SYSTEM_WINDOW)
+                    == PERMISSION_GRANTED ? ADD_OKAY : ADD_PERMISSION_DENIED;
+        }
+    }
+
+为了解决问题一，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，
 绕过NMS就无法获取到有效的windowToken，于是就掉进第四个问题里了。
 除了去获取悬浮窗权限，改用TYPE_PHONE等类型，我暂时还没有找到其他更好的解决方法。但悬浮窗权限往往不容易获取，
 所以目前的DovaToast暂时是这样做的：
 
-    在捕获到token null is not valid异常时，改用系统Toast去展示，当然这里会先对系统Toast进行封装修改，以解决问题二和问题三。
+    在捕获到token null is not valid异常时：
+    * 如果通知权限未被关闭，改用系统Toast去展示，当然这里会先对系统Toast进行封装修改，以解决问题二和问题三；
+    * 如果通知权限被关闭，使用TYPE_APPLICATION_PANEL配合Activity展示弹窗，但是该弹窗只能展示在当前页面，不具有跨页面功能。
 
 ## TODO LIST:
 
-    *考虑是否对Toast增加优先级属性，优先级高的Toast优先置于待处理队列的头部。
-    *多个弹窗连续出现时：
-        1.相同优先级时，会终止上一个，直接展示后一个；
-        2.不同优先级时，如果后一个的优先级更高则会终止上一个，直接展示后一个。
+* 考虑是否可能解决问题五
 
-1．WindowToken的意义
+## 其他尝试
 
-为了搞清晰WindowToken的作用是什么。看一下其位于WindowToken.java中的定义。尽管它未定义不论什么函数，但其成员变量的意义却非常重要。
+* 新项目做应用架构的时候可以考虑把整个应用(除闪屏页等特殊界面外)做成只有一个Activity，其他全是Fragment，这样就不存在悬浮窗的问题啦。
+* 如果能够接受Toast不跨界面的话，建议使用SnackBar
 
- ·  WindowToken将属于同一个应用组件的窗体组织在了一起。所谓的应用组件能够是Activity、InputMethod、Wallpaper以及Dream。在WMS对窗体的管理过程中，用WindowToken指代一个应用组件。比如在进行窗体ZOrder排序时。属于同一个WindowToken的窗体会被安排在一起，而且在当中定义的一些属性将会影响全部属于此WindowToken的窗体。这些都表明了属于同一个WindowToken的窗体之间的紧密联系。
-
- ·  WindowToken具有令牌的作用，是相应用组件的行为进行规范管理的一个手段。
-
-WindowToken由应用组件或其管理者负责向WMS声明并持有。应用组件在须要新的窗体时。必须提供WindowToken以表明自己的身份，而且窗体的类型必须与所持有的WindowToken的类型一致。
 
 从上面的代码能够看到，在创建系统类型的窗体时不须要提供一个有效的Token，WMS会隐式地为其声明一个WindowToken，看起来谁都能够加入个系统级的窗体。难道Android为了内部使用方便而置安全于不顾吗？非也。addWindow()函数一開始的mPolicy.checkAddPermission()的目的就是如此。它要求client必须拥有SYSTEM_ALERT_WINDOW或INTERNAL_SYSTEM_WINDOW权限才干创建系统类型的窗体。

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.dovar.dovatoast.R;
+import com.dovar.dovatoast.lib.inner.IToast;
 import com.dovar.dovatoast.lib.inner.TN;
 
 import java.lang.annotation.Retention;
@@ -18,9 +19,11 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * @Date: 2018/11/13
  * @Author: heweizong
- * @Description: 使用系统Toast的问题 {@link android.widget.Toast}：当通知权限被关闭时在华为等手机上Toast不显示。因此采取自定义Toast解决
+ * @Description: 使用系统Toast的问题 {@link android.widget.Toast}：当通知权限被关闭时在华为等手机上Toast不显示。因此采取自定义Toast解决.
+ * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，
+ * 如果通知权限未被关闭，则改用{@link com.dovar.dovatoast.lib.inner.SystemToast}，否则使用{@link com.dovar.dovatoast.lib.inner.ActivityToast}
  */
-public class DovaToast implements Cloneable {
+public class DovaToast implements Cloneable, IToast {
 
     private Context mContext;
     private View contentView;
@@ -42,6 +45,10 @@ public class DovaToast implements Cloneable {
     public static final int DURATION_SHORT = 2000;
     public static final int DURATION_LONG = 3500;
 
+    /**
+     * @param mContext 建议使用Activity。如果使用AppContext则当通知权限被禁用且TYPE_TOAST被WindowManager.addView()抛出异常时，无法正常显示弹窗。
+     *                 在API25+的部分手机上TYPE_TOAST被WindowManager.addView()时会抛出异常
+     */
     public DovaToast(@NonNull Context mContext) {
         this.mContext = mContext;
         LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -87,6 +94,7 @@ public class DovaToast implements Cloneable {
     }
 
     //展示Toast
+    @Override
     public void show() {
         TN.instance().add(this);
     }
@@ -95,6 +103,7 @@ public class DovaToast implements Cloneable {
      * 取消Toast,会清除队列中所有Toast任务
      * 因为TN中使用的是{@link this#clone()}，外部没有Toast队列中单个任务的引用，所以外部无法单独取消一个Toast任务
      */
+    @Override
     public void cancel() {
         TN.instance().cancelAll();
     }

@@ -73,7 +73,8 @@ public class SystemTN extends Handler {
     }
 
     private void remove(SystemToast toast) {
-        toast.cancel();
+        toastQueue.remove(toast);
+        toast.cancelInternal();
         // 展示下一个Toast
         showNextToast();
     }
@@ -81,7 +82,7 @@ public class SystemTN extends Handler {
     void cancelAll() {
         removeMessages(REMOVE);
         if (!toastQueue.isEmpty()) {
-            toastQueue.peek().cancel();
+            toastQueue.peek().cancelInternal();
         }
         toastQueue.clear();
     }
@@ -127,7 +128,7 @@ public class SystemTN extends Handler {
     }
 
     private void displayToast(@NonNull SystemToast toast) {
-        toast.show();
+        toast.showInternal();
         //展示到时间后移除
         sendRemoveMsgDelay(toast);
     }

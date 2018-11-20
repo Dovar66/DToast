@@ -1,9 +1,11 @@
 package com.dovar.dovatoast.lib.inner;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewManager;
@@ -80,19 +82,16 @@ public class TN extends Handler {
         }
     }
 
-  /*  private void updateWMLP(DovaToast toast) {
-        WindowManager windowManager = getWMManager(toast);
-        if (windowManager != null) {
-            windowManager.updateViewLayout(toast.getView(), toast.getWMParams());
-        }
-    }*/
-
     private void remove(DovaToast toast) {
         toastQueue.remove(toast);
         if (toast != null && toast.isShowing()) {
             WindowManager windowManager = getWMManager(toast);
             if (windowManager != null) {
-                windowManager.removeView(toast.getView());
+                try {
+                    windowManager.removeView(toast.getView());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
         // 展示下一个Toast
@@ -106,7 +105,11 @@ public class TN extends Handler {
             if (toast != null && toast.isShowing()) {
                 WindowManager windowManager = getWMManager(toast);
                 if (windowManager != null) {
-                    windowManager.removeView(toast.getView());
+                    try {
+                        windowManager.removeView(toast.getView());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -172,14 +175,25 @@ public class TN extends Handler {
                     //Toast源码在7.1及以上也有了变化，Toast的WindowManager.LayoutParams参数额外添加了一个token属性，它是在NMS中被初始化的，用于对添加的窗口类型进行校验
                     //7.1以上版本不允许同时展示多个TYPE_TOAST窗口，第二个TYPE_TOAST的WindowManager.addView()会抛出异常
                     //此时可考虑使用系统Toast
-                    Log.d("DovaToast", "displayToast: windowManager.addView Error!");
-                    if (e.getCause() instanceof WindowManager.BadTokenException) {
+                    Log.e("DovaToast", "displayToast: windowManager.addView Error!");
+                    if (e instanceof WindowManager.BadTokenException) {
+                        //此处代码段不允许再次抛出WindowManager.BadTokenException异常，否则可能造成死循环
                         if (e.getMessage() != null && e.getMessage().contains("token null is not valid")) {
-                            new SystemToast()
-                                    .setView(toastView)
-                                    .setDuration(toast.getDuration())
-                                    .setGravity(toast.getGravity(), toast.getXOffset(), toast.getYOffset())
-                                    .show(toast.getContext());
+                            //如果有通知权限，直接使用系统Toast
+                            if (NotificationManagerCompat.from(toast.getContext()).areNotificationsEnabled()) {
+                                new SystemToast(toast.getContext())
+                                        .setView(toastView)
+                                        .setDuration(toast.getDuration())
+                                        .setGravity(toast.getGravity(), toast.getXOffset(), toast.getYOffset())
+                                        .show();
+                            } else {//否则使用Activity的TYPE_APPLICATION_PANEL
+                                //context非Activity时使用ActivityToast会抛出异常:Unable to add window -- token null is not valid; is your activity running?
+                                new ActivityToast(toast.getContext())
+                                        .setView(toastView)
+                                        .setDuration(toast.getDuration())
+                                        .setGravity(toast.getGravity(), toast.getXOffset(), toast.getYOffset())
+                                        .show();
+                            }
                         }
                     }
                 }
@@ -192,7 +206,6 @@ public class TN extends Handler {
                 //移除一个未在展示的Toast任务后，主动唤起下一个Toast任务
                 showNextToast();
             }
-
         }
     }
 
@@ -208,13 +221,19 @@ public class TN extends Handler {
         }
     }
 
-    /**
-     * 使用ApplicationContext
-     */
     private WindowManager getWMManager(DovaToast toast) {
-        if (toast == null || toast.getContext() == null) return null;
-        return (WindowManager) toast.getContext().getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+        if (toast == null) return null;
+        Context mContext = toast.getContext();
+        if (mContext == null) return null;
+        if (toast instanceof ActivityToast) {
+            //context非Activity时会抛出异常:Unable to add window -- token null is not valid; is your activity running?
+            if (mContext instanceof Activity) {
+                return ((Activity) mContext).getWindowManager();
+            } else {
+                return null;
+            }
+        }
+        return (WindowManager) mContext.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
     }
-
 
 }

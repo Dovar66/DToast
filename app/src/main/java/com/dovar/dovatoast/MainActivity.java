@@ -10,13 +10,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ToastUtil.show("1");
-        ToastUtil.showAtCenter("2");
-        ToastUtil.show("3");
-        ToastUtil.show("4");
-        ToastUtil.show("5");
-        ToastUtil.showAtCenter("6");
-        ToastUtil.showAtCenter("7");
-        ToastUtil.showAtCenter("8");
+        ToastUtil.show(this, "1");
+        ToastUtil.showAtCenter(this, "2");
+        ToastUtil.show(this, "3");
+        ToastUtil.show(this, "4");
+        ToastUtil.show(this, "5");
+        ToastUtil.showAtCenter(this, "6");
+        ToastUtil.showAtCenter(this, "7");
+        ToastUtil.showAtCenter(this, "8");
     }
 }

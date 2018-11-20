@@ -1,18 +1,21 @@
 package com.dovar.dovatoast.lib.inner;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
+import com.dovar.dovatoast.R;
 import com.dovar.dovatoast.lib.DovaToast;
 
 /**
  * @Date: 2018/11/19
  * @Author: heweizong
- * @Description: {@link android.widget.Toast}
+ * @Description: 使用 {@link android.widget.Toast}
  */
-class SystemToast {
+class SystemToast implements IToast,Cloneable{
     /**
      * 在{@link SystemTN#displayToast(SystemToast)}中才被初始化
      */
@@ -28,22 +31,33 @@ class SystemToast {
     private @DovaToast.Duration
     int duration = DovaToast.DURATION_SHORT;
 
-    //外部调用
-    void show(Context mContext) {
-        if (mContext == null) return;
+    public SystemToast(@NonNull Context mContext) {
         this.mContext = mContext;
+        LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (layoutInflater == null) throw new RuntimeException("LayoutInflater is null!");
+        this.contentView = layoutInflater.inflate(R.layout.layout_toast, null);
+    }
+
+    //外部调用
+    @Override
+    public void show() {
         SystemTN.instance().add(this);
     }
 
+    @Override
+    public void cancel() {
+        SystemTN.instance().cancelAll();
+    }
+
     //不允许被外部调用
-    void show() {
+    void showInternal() {
         mToast = Toast.makeText(mContext, "", Toast.LENGTH_SHORT);
         Util.hookHandler(mToast);
         copyToToast(mToast);
         mToast.show();
     }
 
-    void cancel() {
+    void cancelInternal(){
         if (mToast != null) {
             mToast.cancel();
             mToast = null;
@@ -62,18 +76,6 @@ class SystemToast {
         } else if (duration == DovaToast.DURATION_LONG) {
             toast.setDuration(Toast.LENGTH_LONG);
         }
-
-        //重置参数
-       /* // TODO: 2018/11/19
-        this.contentView = null;
-        animation = android.R.style.Animation_Toast;
-        gravity = Gravity.BOTTOM | Gravity.CENTER;
-        xOffset = 0;
-        yOffset = 0;
-        width = WindowManager.LayoutParams.WRAP_CONTENT;
-        height = WindowManager.LayoutParams.WRAP_CONTENT;
-        priority = 0;
-        this.duration = DovaToast.DURATION_SHORT;*/
     }
 
     public SystemToast setView(View mView) {
