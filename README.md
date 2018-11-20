@@ -54,11 +54,12 @@
 造成这个问题的原因应该是各大ROM中NMS维护Toast队列的逻辑有差异。
 同样的，DovaToast内部也维护着自己的队列逻辑，保证在所有手机上使用DovaToast的效果相同。
 
-     *DovaToast中多个弹窗连续出现时：
+     DovaToast中多个弹窗连续出现时：
+
             1.相同优先级时，会终止上一个，直接展示后一个；
             2.不同优先级时，如果后一个的优先级更高则会终止上一个，直接展示后一个。
 
-## 问题三：Toast的BadTokenException问题
+## 问题三：系统Toast的BadTokenException问题
 
 * Toast有个内部类 TN（extends ITransientNotification.Stub），调用Toast.show()时会将TN传递给NMS；
 
@@ -79,7 +80,7 @@
 
 * 在NMS中会生成一个windowToken，并将windowToken给到WindowManagerService，WMS会暂时保存该token并用于之后的校验；
 
-NotificationManagerService.java  #enqueueToast源码：
+    NotificationManagerService.java  #enqueueToast源码：
 
             synchronized (mToastQueue) {
                 int callingPid = Binder.getCallingPid();
@@ -372,6 +373,7 @@ API26：（PhoneWindowManager.java源码）
 所以目前的DovaToast暂时是这样做的：
 
     在捕获到token null is not valid异常时：
+
     * 如果通知权限未被关闭，改用系统Toast去展示，当然这里会先对系统Toast进行封装修改，以解决问题二和问题三；
     * 如果通知权限被关闭，使用TYPE_APPLICATION_PANEL配合Activity展示弹窗，但是该弹窗只能展示在当前页面，不具有跨页面功能。
 
@@ -383,6 +385,3 @@ API26：（PhoneWindowManager.java源码）
 
 * 新项目做应用架构的时候可以考虑把整个应用(除闪屏页等特殊界面外)做成只有一个Activity，其他全是Fragment，这样就不存在悬浮窗的问题啦。
 * 如果能够接受Toast不跨界面的话，建议使用SnackBar
-
-
-从上面的代码能够看到，在创建系统类型的窗体时不须要提供一个有效的Token，WMS会隐式地为其声明一个WindowToken，看起来谁都能够加入个系统级的窗体。难道Android为了内部使用方便而置安全于不顾吗？非也。addWindow()函数一開始的mPolicy.checkAddPermission()的目的就是如此。它要求client必须拥有SYSTEM_ALERT_WINDOW或INTERNAL_SYSTEM_WINDOW权限才干创建系统类型的窗体。
