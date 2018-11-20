@@ -12,7 +12,7 @@ import com.dovar.dovatoast.lib.DovaToast;
  * @Author: heweizong
  * @Description: 只展示在当前Activity的弹窗
  */
-public class ActivityToast extends DovaToast {
+class ActivityToast extends DovaToast {
 
     //context非Activity时会抛出异常:Unable to add window -- token null is not valid; is your activity running?
     public ActivityToast(@NonNull Context mContext) {

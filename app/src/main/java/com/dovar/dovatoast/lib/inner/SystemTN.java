@@ -11,7 +11,7 @@ import java.util.LinkedList;
  * @Author: heweizong
  * @Description:
  */
-public class SystemTN extends Handler {
+class SystemTN extends Handler {
     final static int REMOVE = 2;
 
     private final LinkedList<SystemToast> toastQueue;//列表中成员要求非空
