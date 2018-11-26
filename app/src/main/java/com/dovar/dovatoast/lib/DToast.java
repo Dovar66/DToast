@@ -8,6 +8,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import com.dovar.dovatoast.lib.inner.DovaToast;
 import com.dovar.dovatoast.lib.inner.IToast;
 import com.dovar.dovatoast.lib.inner.SystemToast;
+import com.dovar.dovatoast.lib.inner.Util;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -15,7 +16,8 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * @Date: 2018/11/26
  * @Author: heweizong
- * @Description:
+ * @Description: 使用系统Toast的问题 {@link android.widget.Toast}：当通知权限被关闭时在华为等手机上Toast不显示。因此采取自定义Toast解决.
+ * 优先使用系统Toast，如果通知权限被关闭，则使用DovaToast.
  */
 public class DToast {
 
@@ -30,7 +32,8 @@ public class DToast {
     public static IToast make(Context mContext) {
         if (mContext == null) return null;
         //如果有通知权限，直接使用系统Toast
-        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled()) {
+        //MIUI系统没有通知权限时系统Toast也能正常展示
+        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || Util.isMIUI()) {
             return new SystemToast(mContext);
         } else {//否则使用自定义Toast
             return new DovaToast(mContext);

@@ -15,9 +15,8 @@ import com.dovar.dovatoast.lib.DToast;
 /**
  * @Date: 2018/11/13
  * @Author: heweizong
- * @Description: 使用系统Toast的问题 {@link android.widget.Toast}：当通知权限被关闭时在华为等手机上Toast不显示。因此采取自定义Toast解决.
- * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，
- * 如果通知权限未被关闭，则改用{@link com.dovar.dovatoast.lib.inner.SystemToast}，否则使用{@link com.dovar.dovatoast.lib.inner.ActivityToast}
+ * @Description: 解决通知权限被关闭时系统Toast无法正常展示的问题.
+ * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link com.dovar.dovatoast.lib.inner.ActivityToast}
  */
 public class DovaToast implements Cloneable, IToast {
     Context mContext;
@@ -48,30 +47,7 @@ public class DovaToast implements Cloneable, IToast {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.format = PixelFormat.TRANSLUCENT;
-      /*  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            //申请悬浮窗权限
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED) {
-                String[] permission = {Manifest.permission.SYSTEM_ALERT_WINDOW};
-                ActivityCompat.requestPermissions((Activity) mContext, permission, 1);
-            }
-            layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE;
-        } else {*/
         lp.type = WindowManager.LayoutParams.TYPE_TOAST;
-//        }
-
-        /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
-            mWM = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            mParams.type = WindowManager.LayoutParams.TYPE_TOAST;
-            mParams.y = mToast.getYOffset();
-        } else {
-            Context topActivityOrApp = Utils.getTopActivityOrApp();
-            if (topActivityOrApp instanceof Activity) {
-                mWM = ((Activity) topActivityOrApp).getWindowManager();
-            }
-            mParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
-            mParams.y = mToast.getYOffset() + getNavBarHeight();
-        }*/
-
         lp.height = this.height;
         lp.width = this.width;
         lp.windowAnimations = this.animation;
@@ -101,11 +77,11 @@ public class DovaToast implements Cloneable, IToast {
         DovaTN.instance().cancelAll();
     }
 
-    public static void cancelAll(){
+    public static void cancelAll() {
         DovaTN.instance().cancelAll();
     }
 
-    public static void cancelActivityToast(Activity mActivity){
+    public static void cancelActivityToast(Activity mActivity) {
         DovaTN.instance().cancelActivityToast(mActivity);
     }
 
