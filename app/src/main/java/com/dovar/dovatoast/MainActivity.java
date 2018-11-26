@@ -3,6 +3,8 @@ package com.dovar.dovatoast;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.dovar.dovatoast.lib.DToast;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -18,5 +20,11 @@ public class MainActivity extends AppCompatActivity {
         ToastUtil.showAtCenter(this, "6");
         ToastUtil.showAtCenter(this, "7");
         ToastUtil.showAtCenter(this, "8");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        DToast.cancelActivityToast(this);
     }
 }

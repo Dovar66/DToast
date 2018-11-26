@@ -1,18 +1,14 @@
 package com.dovar.dovatoast.lib.inner;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewManager;
 import android.view.ViewParent;
 import android.view.WindowManager;
-
-import com.dovar.dovatoast.lib.DovaToast;
 
 import java.util.LinkedList;
 
@@ -21,22 +17,22 @@ import java.util.LinkedList;
  * @Author: heweizong
  * @Description:
  */
-public class TN extends Handler {
+class DovaTN extends Handler {
     final static int REMOVE = 2;
 
     private final LinkedList<DovaToast> toastQueue;//列表中成员要求非空
 
-    private TN() {
+    private DovaTN() {
         //默认队列中最多存放8个Toast，不够的话可以自行调整到合适的值
         toastQueue = new LinkedList<>();
     }
 
-    public static TN instance() {
+    static DovaTN instance() {
         return SingletonHolder.mTn;
     }
 
     private static class SingletonHolder {
-        private static final TN mTn = new TN();
+        private static final DovaTN mTn = new DovaTN();
     }
 
     /**
@@ -84,8 +80,32 @@ public class TN extends Handler {
 
     private void remove(DovaToast toast) {
         toastQueue.remove(toast);
+        removeInternal(toast);
+    }
+
+    void cancelAll() {
+        removeMessages(REMOVE);
+        if (!toastQueue.isEmpty()) {
+            removeInternal(toastQueue.peek());
+        }
+        toastQueue.clear();
+    }
+
+    void cancelActivityToast(Activity activity) {
+        if (activity==null) return;
+        for (DovaToast t : toastQueue
+                ) {
+            if (t instanceof ActivityToast && t.getContext() == activity) {
+                remove(t);
+            }
+        }
+    }
+
+    private void removeInternal(DovaToast toast) {
         if (toast != null && toast.isShowing()) {
-            WindowManager windowManager = getWMManager(toast);
+            // FIXME: 2018/11/26 存在问题：队列中多个Toast使用相同ContentView时可能造成混乱
+            // FIXME: 不过，不同时展示多个Toast的话，也不会出现此问题.因为next.show()在last.removeView()动作之后
+            WindowManager windowManager = toast.getWMManager();
             if (windowManager != null) {
                 try {
                     windowManager.removeView(toast.getView());
@@ -93,27 +113,8 @@ public class TN extends Handler {
                     e.printStackTrace();
                 }
             }
+            toast.isShowing = false;
         }
-        // 展示下一个Toast
-        showNextToast();
-    }
-
-    public void cancelAll() {
-        removeMessages(REMOVE);
-        if (!toastQueue.isEmpty()) {
-            DovaToast toast = toastQueue.peek();
-            if (toast != null && toast.isShowing()) {
-                WindowManager windowManager = getWMManager(toast);
-                if (windowManager != null) {
-                    try {
-                        windowManager.removeView(toast.getView());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        toastQueue.clear();
     }
 
     /**
@@ -157,7 +158,7 @@ public class TN extends Handler {
     }
 
     private void displayToast(@NonNull DovaToast toast) {
-        WindowManager windowManager = getWMManager(toast);
+        WindowManager windowManager = toast.getWMManager();
         if (windowManager != null) {
             View toastView = toast.getView();
             if (toastView != null) {
@@ -171,7 +172,7 @@ public class TN extends Handler {
                     windowManager.addView(toastView, toast.getWMParams());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    //Android从7.1版本开始，Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于权限校验才允许添加。
+                    //Android从8.0版本开始，Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于权限校验才允许添加。
                     //Toast源码在7.1及以上也有了变化，Toast的WindowManager.LayoutParams参数额外添加了一个token属性，它是在NMS中被初始化的，用于对添加的窗口类型进行校验
                     //7.1以上版本不允许同时展示多个TYPE_TOAST窗口，第二个TYPE_TOAST的WindowManager.addView()会抛出异常
                     //此时可考虑使用系统Toast
@@ -179,15 +180,8 @@ public class TN extends Handler {
                     if (e instanceof WindowManager.BadTokenException) {
                         //此处代码段不允许再次抛出WindowManager.BadTokenException异常，否则可能造成死循环
                         if (e.getMessage() != null && e.getMessage().contains("token null is not valid")) {
-                            //如果有通知权限，直接使用系统Toast
-                            if (NotificationManagerCompat.from(toast.getContext()).areNotificationsEnabled()) {
-                                new SystemToast(toast.getContext())
-                                        .setView(toastView)
-                                        .setDuration(toast.getDuration())
-                                        .setGravity(toast.getGravity(), toast.getXOffset(), toast.getYOffset())
-                                        .show();
-                            } else {//否则使用Activity的TYPE_APPLICATION_PANEL
-                                //context非Activity时使用ActivityToast会抛出异常:Unable to add window -- token null is not valid; is your activity running?
+                            //尝试使用ActivityToast
+                            if (toast.getContext() instanceof Activity && !(toast instanceof ActivityToast)) {
                                 new ActivityToast(toast.getContext())
                                         .setView(toastView)
                                         .setDuration(toast.getDuration())
@@ -197,6 +191,7 @@ public class TN extends Handler {
                         }
                     }
                 }
+                toast.isShowing = true;
 
                 //展示到时间后移除
                 sendRemoveMsgDelay(toast);
@@ -214,26 +209,13 @@ public class TN extends Handler {
         if (message == null) return;
         switch (message.what) {
             case REMOVE:
+                //移除当前
                 remove((DovaToast) message.obj);
+                // 展示下一个Toast
+                showNextToast();
                 break;
             default:
                 break;
         }
     }
-
-    private WindowManager getWMManager(DovaToast toast) {
-        if (toast == null) return null;
-        Context mContext = toast.getContext();
-        if (mContext == null) return null;
-        if (toast instanceof ActivityToast) {
-            //context非Activity时会抛出异常:Unable to add window -- token null is not valid; is your activity running?
-            if (mContext instanceof Activity) {
-                return ((Activity) mContext).getWindowManager();
-            } else {
-                return null;
-            }
-        }
-        return (WindowManager) mContext.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-    }
-
 }

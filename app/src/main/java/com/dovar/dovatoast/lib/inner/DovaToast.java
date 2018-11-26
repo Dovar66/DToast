@@ -1,8 +1,8 @@
-package com.dovar.dovatoast.lib;
+package com.dovar.dovatoast.lib.inner;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -10,11 +10,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.dovar.dovatoast.R;
-import com.dovar.dovatoast.lib.inner.IToast;
-import com.dovar.dovatoast.lib.inner.TN;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import com.dovar.dovatoast.lib.DToast;
 
 /**
  * @Date: 2018/11/13
@@ -24,8 +20,7 @@ import java.lang.annotation.RetentionPolicy;
  * 如果通知权限未被关闭，则改用{@link com.dovar.dovatoast.lib.inner.SystemToast}，否则使用{@link com.dovar.dovatoast.lib.inner.ActivityToast}
  */
 public class DovaToast implements Cloneable, IToast {
-
-    private Context mContext;
+    Context mContext;
     private View contentView;
     private int animation = android.R.style.Animation_Toast;
     private int gravity = Gravity.BOTTOM | Gravity.CENTER;
@@ -34,16 +29,9 @@ public class DovaToast implements Cloneable, IToast {
     private int width = WindowManager.LayoutParams.WRAP_CONTENT;
     private int height = WindowManager.LayoutParams.WRAP_CONTENT;
     private int priority;//优先级
-    private @Duration
-    int duration = DURATION_SHORT;
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({DURATION_SHORT, DURATION_LONG})
-    public @interface Duration {
-    }
-
-    public static final int DURATION_SHORT = 2000;
-    public static final int DURATION_LONG = 3500;
+    private @DToast.Duration
+    int duration = DToast.DURATION_SHORT;
+    boolean isShowing;//TN标记为正在展示
 
     /**
      * @param mContext 建议使用Activity。如果使用AppContext则当通知权限被禁用且TYPE_TOAST被WindowManager.addView()抛出异常时，无法正常显示弹窗。
@@ -93,10 +81,15 @@ public class DovaToast implements Cloneable, IToast {
         return lp;
     }
 
+    public WindowManager getWMManager() {
+        if (mContext == null) return null;
+        return (WindowManager) mContext.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+    }
+
     //展示Toast
     @Override
     public void show() {
-        TN.instance().add(this);
+        DovaTN.instance().add(this);
     }
 
     /**
@@ -105,13 +98,22 @@ public class DovaToast implements Cloneable, IToast {
      */
     @Override
     public void cancel() {
-        TN.instance().cancelAll();
+        DovaTN.instance().cancelAll();
+    }
+
+    public static void cancelAll(){
+        DovaTN.instance().cancelAll();
+    }
+
+    public static void cancelActivityToast(Activity mActivity){
+        DovaTN.instance().cancelActivityToast(mActivity);
     }
 
     public Context getContext() {
         return this.mContext;
     }
 
+    @Override
     public DovaToast setView(View mView) {
         this.contentView = mView;
         return this;
@@ -121,7 +123,8 @@ public class DovaToast implements Cloneable, IToast {
         return this.contentView;
     }
 
-    public DovaToast setDuration(@Duration int duration) {
+    @Override
+    public DovaToast setDuration(@DToast.Duration int duration) {
         this.duration = duration;
         return this;
     }
@@ -130,6 +133,7 @@ public class DovaToast implements Cloneable, IToast {
         return this.duration;
     }
 
+    @Override
     public DovaToast setAnimation(int animation) {
         this.animation = animation;
         return this;
@@ -140,6 +144,7 @@ public class DovaToast implements Cloneable, IToast {
      * @param xOffset pixel
      * @param yOffset pixel
      */
+    @Override
     public DovaToast setGravity(int gravity, int xOffset, int yOffset) {
         this.gravity = gravity;
         this.xOffset = xOffset;
@@ -147,6 +152,7 @@ public class DovaToast implements Cloneable, IToast {
         return this;
     }
 
+    @Override
     public DovaToast setGravity(int gravity) {
         return setGravity(gravity, 0, 0);
     }
@@ -167,6 +173,7 @@ public class DovaToast implements Cloneable, IToast {
         return priority;
     }
 
+    @Override
     public DovaToast setPriority(int mPriority) {
         this.priority = mPriority;
         return this;
@@ -178,7 +185,7 @@ public class DovaToast implements Cloneable, IToast {
      * @return toast是否正在展示
      */
     public boolean isShowing() {
-        return contentView != null && contentView.isShown();
+        return isShowing && contentView != null && contentView.isShown();
     }
 
     @Override

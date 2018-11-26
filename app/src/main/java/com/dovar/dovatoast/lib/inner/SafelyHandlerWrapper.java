@@ -8,7 +8,7 @@ import android.os.Message;
  * @Author: heweizong
  * @Description:
  */
-public class SafelyHandlerWrapper extends Handler {
+class SafelyHandlerWrapper extends Handler {
     private Handler impl;
 
     public SafelyHandlerWrapper(Handler impl) {

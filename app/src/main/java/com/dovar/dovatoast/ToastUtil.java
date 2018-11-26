@@ -5,7 +5,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
 
-import com.dovar.dovatoast.lib.DovaToast;
+import com.dovar.dovatoast.lib.DToast;
 
 /**
  * @Date: 2018/11/13
@@ -17,28 +17,32 @@ public class ToastUtil {
     public static void show(Context appContext, String msg) {
         if (appContext == null) return;
         if (msg == null) return;
-        DovaToast mToast = new DovaToast(appContext);
         View toastRoot = View.inflate(appContext, R.layout.layout_toast, null);
-        mToast.setView(toastRoot);
         TextView tv_text = (TextView) toastRoot.findViewById(R.id.tv_content);
         if (tv_text != null) {
             tv_text.setText(msg);
         }
-        mToast.show();
+        DToast.make(appContext)
+                .setView(toastRoot)
+                .show();
     }
 
 
     public static void showAtCenter(Context appContext, String msg) {
         if (appContext == null) return;
         if (msg == null) return;
-        DovaToast mToast = new DovaToast(appContext);
         View toastRoot = View.inflate(appContext, R.layout.layout_toast_center, null);
-        mToast.setView(toastRoot);
-        mToast.setGravity(Gravity.CENTER, 0, 0);
         TextView tv_text = (TextView) toastRoot.findViewById(R.id.tv_content);
         if (tv_text != null) {
             tv_text.setText(msg);
         }
-        mToast.show();
+        DToast.make(appContext)
+                .setView(toastRoot)
+                .setGravity(Gravity.CENTER, 0, 0)
+                .show();
+    }
+
+    public static void cancelAll() {
+        DToast.cancel();
     }
 }
