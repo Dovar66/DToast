@@ -19,7 +19,8 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 
     1.通知权限未被关闭时，使用SystemToast(修复了问题2和问题3的系统Toast)
     2.通知权限被关闭时，使用DovaToast(自定义的TYPE_TOAST弹窗)
-    3.当使用DovaToast出现token null is not valid时，尝试使用ActivityToast(自定义的TYPE_APPLICATION_ATTACHED_DIALOG弹窗，Context要求使用Activity)
+    3.当使用DovaToast出现token null is not valid时，尝试使用ActivityToast
+    (自定义的TYPE_APPLICATION_ATTACHED_DIALOG弹窗，只有当传入Context为Activity时，才会启用ActivityToast)
 
 ## 问题一：关闭通知权限时Toast不显示
 
