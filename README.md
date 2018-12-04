@@ -32,6 +32,8 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 
 不过，如果想要保证在所有场景下都能正常展示弹窗，还是建议在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。
 
+接下来再详细分析下上面提到的五个问题：
+
 ## 问题一：关闭通知权限时Toast不显示
 
     看下方Toast源码中的show()方法，通过AIDL获取到INotificationManager，并将接下来的显示流程控制权
