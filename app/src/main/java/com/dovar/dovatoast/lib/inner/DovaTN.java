@@ -23,7 +23,6 @@ class DovaTN extends Handler {
     private final LinkedList<DovaToast> toastQueue;//列表中成员要求非空
 
     private DovaTN() {
-        //默认队列中最多存放8个Toast，不够的话可以自行调整到合适的值
         toastQueue = new LinkedList<>();
     }
 
@@ -172,11 +171,7 @@ class DovaTN extends Handler {
                     windowManager.addView(toastView, toast.getWMParams());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    //Android从8.0版本开始，Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于权限校验才允许添加。
-                    //Toast源码在7.1及以上也有了变化，Toast的WindowManager.LayoutParams参数额外添加了一个token属性，它是在NMS中被初始化的，用于对添加的窗口类型进行校验
-                    //7.1以上版本不允许同时展示多个TYPE_TOAST窗口，第二个TYPE_TOAST的WindowManager.addView()会抛出异常
-                    //此时可考虑使用系统Toast
-                    Log.e("DovaToast", "displayToast: windowManager.addView Error!");
+                    Log.e("DToast", "displayToast: windowManager.addView Error!");
                     if (e instanceof WindowManager.BadTokenException) {
                         //此处代码段不允许再次抛出WindowManager.BadTokenException异常，否则可能造成死循环
                         if (e.getMessage() != null && e.getMessage().contains("token null is not valid")) {

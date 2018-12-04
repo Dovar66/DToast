@@ -12,19 +12,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ToastUtil.show(this, "1");
-        ToastUtil.showAtCenter(this, "2");
-        ToastUtil.show(this, "3");
-        ToastUtil.show(this, "4");
-        ToastUtil.show(this, "5");
-        ToastUtil.showAtCenter(this, "6");
-        ToastUtil.showAtCenter(this, "7");
-        ToastUtil.showAtCenter(this, "8");
+        ToastUtil.show(this, "hello");
+        ToastUtil.showAtCenter(this, "你是来搞笑的吗");
+        ToastUtil.show(this, "world");
+        ToastUtil.show(this, "你才是来搞笑的");
+        ToastUtil.show(this, "mmp");
+        ToastUtil.showAtCenter(this, "弄啥嘞");
+        ToastUtil.showAtCenter(this, "再瞅一个试试");
+        ToastUtil.showAtCenter(this, "哇咔咔。。");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //如果DToast.make(mContext)使用的是ActivityContext,则在退出Activity时需要调用
         DToast.cancelActivityToast(this);
     }
 }

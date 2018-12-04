@@ -1,6 +1,6 @@
-# DovaToast
+# DToast
 
-使用系统Toast存在的问题
+先看看使用系统Toast存在的问题：
 
     1.当通知权限被关闭时在华为等手机上Toast不显示；
 
@@ -8,14 +8,24 @@
 
     3.Toast的BadTokenException问题；
 
-    4.Android8.0之后的token null is not valid问题；
+当发现系统Toast存在问题时，不少同学都会采用自定义的TYPE_TOAST弹窗来实现相同效果。虽然大部分情况下效果都是
+OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 
-    5.Android7.1之后，不允许同时展示两个TYPE_TOAST弹窗(实测部分机型才会)。(仅捕获异常，暂未处理，属于特殊场景需求)。
+    4.Android8.0之后的token null is not valid问题(实测部分机型问题)；
+
+    5.Android7.1之后，不允许同时展示两个TYPE_TOAST弹窗(实测部分机型问题)。
+
+那么，DToast使用的解决方案是：
+
+    1.通知权限未被关闭时，使用SystemToast(修复了问题2和问题3的系统Toast)
+    2.通知权限被关闭时，使用DovaToast(自定义的TYPE_TOAST弹窗)
+    3.当使用DovaToast出现token null is not valid时，尝试使用ActivityToast(自定义的TYPE_APPLICATION_ATTACHED_DIALOG弹窗，Context要求使用Activity)
 
 ## 问题一：关闭通知权限时Toast不显示
 
     看下方Toast源码中的show()方法，通过AIDL获取到INotificationManager，并将接下来的显示流程控制权
-    交给NotificationManagerService。NMS中会对Toast进行权限校验，当通知权限校验不通过时，Toast将不做展示。
+    交给NotificationManagerService。
+    NMS中会对Toast进行权限校验，当通知权限校验不通过时，Toast将不做展示。
     当然不同ROM中NMS可能会有不同，比如MIUI就对这部分内容进行了修改，所以小米手机关闭通知权限不会导致Toast不显示。
 
       /**
@@ -51,10 +61,10 @@
             * 红米6pro-MIUI9（两个Toast同时展示）
             * 荣耀5C-android6.0（第一个TOAST展示完成后，第二个才开始展示）
 
-造成这个问题的原因应该是各大ROM中NMS维护Toast队列的逻辑有差异。
-同样的，DovaToast内部也维护着自己的队列逻辑，保证在所有手机上使用DovaToast的效果相同。
+造成这个问题的原因应该是各大厂商ROM中NMS维护Toast队列的逻辑有差异。
+同样的，DToast内部也维护着自己的队列逻辑，保证在所有手机上使用DToast的效果相同。
 
-     DovaToast中多个弹窗连续出现时：
+     DToast中多个弹窗连续出现时：
 
             1.相同优先级时，会终止上一个，直接展示后一个；
             2.不同优先级时，如果后一个的优先级更高则会终止上一个，直接展示后一个。
@@ -230,7 +240,7 @@
                     /* ignore */
                 }
 
-因此对于8.0之前的我们也需要做相同的处理。DovaToast是通过反射完成这个动作，具体看下方实现：
+因此对于8.0之前的我们也需要做相同的处理。DToast是通过反射完成这个动作，具体看下方实现：
 
       //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
          private void hook(Toast toast) {
@@ -271,7 +281,7 @@
          }
 ## 问题四：Android8.0之后的token null is not valid问题
 
-Android8.0后Google对WindowManager做了一些限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于校验。
+Android8.0后对WindowManager做了限制和修改，特别是TYPE_TOAST类型的窗口，必须要传递一个token用于校验。
 
 API25：（PhoneWindowManager.java源码）
 
@@ -368,18 +378,18 @@ API26：（PhoneWindowManager.java源码）
     }
 
 为了解决问题一，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，
-绕过NMS就无法获取到有效的windowToken，于是就掉进第四个问题里了。
-除了去获取悬浮窗权限，改用TYPE_PHONE等类型，我暂时还没有找到其他更好的解决方法。但悬浮窗权限往往不容易获取，
-所以目前的DovaToast暂时是这样做的：
+绕过NMS就无法获取到有效的windowToken，于是作为TYPE_TOAST的DovaToast就可能陷入第四个问题。因此，DToast选择在DovaToast出现
+该问题时引入ActivityToast，在DovaToast无法正常展示时创建一个依附于Activity的弹窗展示出来，不过ActivityToast只会展示在当前Activity，不具有跨页面功能。
+如果说有更好的方案，那肯定是去获取悬浮窗权限然后改用TYPE_PHONE等类型，但悬浮窗权限往往不容易获取，目前来看恐怕除了微信其他APP都不能保证拿得到用户的悬浮窗权限。
 
-    在捕获到token null is not valid异常时：
+## 问题五：Android7.1之后，不允许同时展示两个TYPE_TOAST弹窗
 
-    * 如果通知权限未被关闭，改用系统Toast去展示，当然这里会先对系统Toast进行封装修改，以解决问题二和问题三；
-    * 如果通知权限被关闭，使用TYPE_APPLICATION_PANEL配合Activity展示弹窗，但是该弹窗只能展示在当前页面，不具有跨页面功能。
+    DToast的弹窗策略就是同一时间最多只展示一个弹窗，逻辑上就避免了此问题。因此仅捕获该异常。
 
 ## TODO LIST:
 
-* 考虑是否可能解决问题五
+* 增加适配应用已获取到悬浮窗权限的情况
+* 考虑是否需要支持同时展示多个弹窗
 
 ## 其他建议
 

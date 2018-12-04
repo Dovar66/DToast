@@ -1,6 +1,7 @@
 package com.dovar.dovatoast.lib.inner;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.view.Gravity;
@@ -174,6 +175,7 @@ public class SystemToast implements IToast, Cloneable {
 
     //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
     static void hookHandler(Toast toast) {
+        if (Build.VERSION.SDK_INT >= 26) return;
         try {
             Field sField_TN = Toast.class.getDeclaredField("mTN");
             sField_TN.setAccessible(true);
