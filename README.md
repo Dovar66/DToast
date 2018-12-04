@@ -17,10 +17,14 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 
 那么，DToast使用的解决方案是：
 
-    1.通知权限未被关闭时，使用SystemToast(修复了问题2和问题3的系统Toast)
-    2.通知权限被关闭时，使用DovaToast(自定义的TYPE_TOAST弹窗)
-    3.当使用DovaToast出现token null is not valid时，尝试使用ActivityToast
-    (自定义的TYPE_APPLICATION_ATTACHED_DIALOG弹窗，只有当传入Context为Activity时，才会启用ActivityToast)
+    1.通知权限未被关闭时，使用SystemToast(修复了问题2和问题3的系统Toast);
+    2.通知权限被关闭时，使用DovaToast(自定义的TYPE_TOAST弹窗);
+    3.当使用DovaToast出现token null is not valid时，尝试使用ActivityToast(自定义的TYPE_APPLICATION_ATTACHED_DIALOG弹窗
+    ，只有当传入Context为Activity时，才会启用ActivityToast).
+
+相信不少同学旧项目中封装的ToastUtil都是直接使用的ApplicationContext作为上下文，然后在需要弹窗的时候直接就是ToastUtil.show(str)，这样的使用方式对于我们来说是最方便的啦。
+当然，使用DToast你也依然可以沿用这种封装方式，但这种方式在下面这个场景中可能会无法成功展示出弹窗，不过请放心不会导致应用崩溃，而且这个场景出现的概率较小，有以下三个必要条件：1.通知栏权限被关闭(通知栏权限默认都是打开的) 2.非MIUI手机 3.Android8.0以上的部分手机(我最近测试中的几部8.0+设备都不存在该问题)。
+不过，如果想要保证在所有场景下都能正常展示弹窗，还是建议在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。
 
 ## 问题一：关闭通知权限时Toast不显示
 
