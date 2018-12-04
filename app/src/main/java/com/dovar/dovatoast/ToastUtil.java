@@ -14,34 +14,36 @@ import com.dovar.dovatoast.lib.DToast;
  */
 public class ToastUtil {
 
-    public static void show(Context appContext, String msg) {
-        if (appContext == null) return;
+    public static void show(Context mContext, String msg) {
+        if (mContext == null) return;
         if (msg == null) return;
-        View toastRoot = View.inflate(appContext, R.layout.layout_toast, null);
+        View toastRoot = View.inflate(mContext, R.layout.layout_toast, null);
         TextView tv_text = (TextView) toastRoot.findViewById(R.id.tv_content);
         if (tv_text != null) {
             tv_text.setText(msg);
         }
-        DToast.make(appContext)
+        DToast.make(mContext)
                 .setView(toastRoot)
+                .setGravity(Gravity.BOTTOM|Gravity.CENTER,0,30)
                 .show();
     }
 
 
-    public static void showAtCenter(Context appContext, String msg) {
-        if (appContext == null) return;
+    public static void showAtCenter(Context mContext, String msg) {
+        if (mContext == null) return;
         if (msg == null) return;
-        View toastRoot = View.inflate(appContext, R.layout.layout_toast_center, null);
+        View toastRoot = View.inflate(mContext, R.layout.layout_toast_center, null);
         TextView tv_text = (TextView) toastRoot.findViewById(R.id.tv_content);
         if (tv_text != null) {
             tv_text.setText(msg);
         }
-        DToast.make(appContext)
+        DToast.make(mContext)
                 .setView(toastRoot)
                 .setGravity(Gravity.CENTER, 0, 0)
                 .show();
     }
 
+    //退出APP时调用
     public static void cancelAll() {
         DToast.cancel();
     }
