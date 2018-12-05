@@ -17,7 +17,6 @@ class SystemTN extends Handler {
     private final LinkedList<SystemToast> toastQueue;//列表中成员要求非空
 
     private SystemTN() {
-        //默认队列中最多存放8个Toast，不够的话可以自行调整到合适的值
         toastQueue = new LinkedList<>();
     }
 

@@ -115,11 +115,6 @@ public class DovaToast implements Cloneable, IToast {
         return this;
     }
 
-    /**
-     * @param gravity {@link android.view.Gravity#TOP etc..}
-     * @param xOffset pixel
-     * @param yOffset pixel
-     */
     @Override
     public DovaToast setGravity(int gravity, int xOffset, int yOffset) {
         this.gravity = gravity;

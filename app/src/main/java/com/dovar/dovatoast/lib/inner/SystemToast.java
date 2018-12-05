@@ -113,11 +113,6 @@ public class SystemToast implements IToast, Cloneable {
         return this;
     }
 
-    /**
-     * @param gravity {@link android.view.Gravity#TOP etc..}
-     * @param xOffset pixel
-     * @param yOffset pixel
-     */
     @Override
     public SystemToast setGravity(int gravity, int xOffset, int yOffset) {
         this.gravity = gravity;
@@ -190,7 +185,7 @@ public class SystemToast implements IToast, Cloneable {
         }
     }
 
-    //设置金币提示框的动画
+    //设置Toast动画
     static void setupToastAnim(Toast toast, int animRes) {
         try {
             Object mTN = getField(toast, "mTN");
