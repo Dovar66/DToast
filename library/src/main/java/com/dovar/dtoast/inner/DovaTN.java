@@ -1,4 +1,4 @@
-package com.dovar.dovatoast.lib.inner;
+package com.dovar.dtoast.inner;
 
 import android.app.Activity;
 import android.os.Handler;
@@ -171,7 +171,6 @@ class DovaTN extends Handler {
                     windowManager.addView(toastView, toast.getWMParams());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.e("DToast", "displayToast: windowManager.addView Error!");
                     if (e instanceof WindowManager.BadTokenException) {
                         //此处代码段不允许再次抛出WindowManager.BadTokenException异常，否则可能造成死循环
                         if (e.getMessage() != null && e.getMessage().contains("token null is not valid")) {

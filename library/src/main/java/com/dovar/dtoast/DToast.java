@@ -1,14 +1,15 @@
-package com.dovar.dovatoast.lib;
+package com.dovar.dtoast;
 
 import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.dovar.dovatoast.lib.inner.DovaToast;
-import com.dovar.dovatoast.lib.inner.IToast;
-import com.dovar.dovatoast.lib.inner.SystemToast;
-import com.dovar.dovatoast.lib.inner.Util;
+
+import com.dovar.dtoast.inner.DovaToast;
+import com.dovar.dtoast.inner.IToast;
+import com.dovar.dtoast.inner.SystemToast;
+import com.dovar.dtoast.inner.Util;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

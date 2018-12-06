@@ -1,4 +1,4 @@
-package com.dovar.dovatoast.lib.inner;
+package com.dovar.dtoast.inner;
 
 import android.app.Activity;
 import android.content.Context;
@@ -9,14 +9,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.dovar.dovatoast.R;
-import com.dovar.dovatoast.lib.DToast;
+import com.dovar.dtoast.DToast;
+import com.dovar.dtoast.R;
+
 
 /**
  * @Date: 2018/11/13
  * @Author: heweizong
  * @Description: 解决通知权限被关闭时系统Toast无法正常展示的问题.
- * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link com.dovar.dovatoast.lib.inner.ActivityToast}
+ * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link com.dovar.dtoast.inner.ActivityToast}
  */
 public class DovaToast implements Cloneable, IToast {
     Context mContext;
@@ -115,11 +116,6 @@ public class DovaToast implements Cloneable, IToast {
         return this;
     }
 
-    /**
-     * @param gravity {@link android.view.Gravity#TOP etc..}
-     * @param xOffset pixel
-     * @param yOffset pixel
-     */
     @Override
     public DovaToast setGravity(int gravity, int xOffset, int yOffset) {
         this.gravity = gravity;
