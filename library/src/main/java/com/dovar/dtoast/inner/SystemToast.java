@@ -94,6 +94,7 @@ public class SystemToast implements IToast, Cloneable {
         return this;
     }
 
+    @Override
     public View getView() {
         return this.contentView;
     }

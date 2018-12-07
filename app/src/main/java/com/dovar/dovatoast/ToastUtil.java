@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.dovar.dtoast.DToast;
+import com.dovar.dtoast.inner.IToast;
 
 
 /**
@@ -18,15 +19,12 @@ public class ToastUtil {
     public static void show(Context mContext, String msg) {
         if (mContext == null) return;
         if (msg == null) return;
-        View toastRoot = View.inflate(mContext, R.layout.layout_toast, null);
-        TextView tv_text = (TextView) toastRoot.findViewById(R.id.tv_content);
+        IToast toast=DToast.make(mContext);
+        TextView tv_text = (TextView) toast.getView().findViewById(R.id.tv_content);
         if (tv_text != null) {
             tv_text.setText(msg);
         }
-        DToast.make(mContext)
-                .setView(toastRoot)
-                .setGravity(Gravity.BOTTOM|Gravity.CENTER,0,30)
-                .show();
+        toast.setGravity(Gravity.BOTTOM|Gravity.CENTER,0,30).show();
     }
 
 

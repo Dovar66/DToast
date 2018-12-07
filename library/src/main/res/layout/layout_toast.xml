@@ -2,6 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/corners"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
@@ -9,13 +10,11 @@
         android:id="@+id/tv_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#cc000000"
-        android:ellipsize="end"
-        android:maxLines="1"
         android:padding="10dp"
         android:shadowColor="#BB000000"
         android:shadowRadius="2.75"
         android:textColor="#ffffff"
-        android:textSize="28px"
+        android:textSize="14dp"
         tools:text="这是一个Toast"/>
+
 </RelativeLayout>

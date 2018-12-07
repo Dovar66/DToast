@@ -17,6 +17,8 @@ public interface IToast {
 
     IToast setView(View mView);
 
+    View getView();
+
     IToast setDuration(@DToast.Duration int duration);
 
     IToast setGravity(int gravity);

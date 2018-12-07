@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         ToastUtil.show(this, "mmp");
         ToastUtil.showAtCenter(this, "弄啥嘞");
         ToastUtil.showAtCenter(this, "再瞅一个试试");
-        ToastUtil.showAtCenter(this, "哇咔咔。。");
+        ToastUtil.show(this, "哇咔咔。。");
     }
 
     @Override

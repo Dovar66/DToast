@@ -96,6 +96,7 @@ public class DovaToast implements Cloneable, IToast {
         return this;
     }
 
+    @Override
     public View getView() {
         return this.contentView;
     }
