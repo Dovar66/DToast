@@ -1,8 +1,9 @@
-package com.dovar.dovatoast.lib.inner;
+package com.dovar.dtoast.inner;
 
 import android.view.View;
 
-import com.dovar.dovatoast.lib.DToast;
+import com.dovar.dtoast.DToast;
+
 
 /**
  * @Date: 2018/11/20

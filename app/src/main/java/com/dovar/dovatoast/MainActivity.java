@@ -3,7 +3,8 @@ package com.dovar.dovatoast;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.dovar.dovatoast.lib.DToast;
+import com.dovar.dtoast.DToast;
+
 
 public class MainActivity extends AppCompatActivity {
 

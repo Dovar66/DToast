@@ -1,4 +1,4 @@
-package com.dovar.dovatoast.lib.inner;
+package com.dovar.dtoast.inner;
 
 import android.app.Activity;
 import android.os.Handler;

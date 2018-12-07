@@ -1,4 +1,4 @@
-package com.dovar.dovatoast.lib.inner;
+package com.dovar.dtoast.inner;
 
 import android.content.Context;
 import android.os.Build;
@@ -10,15 +10,16 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.dovar.dovatoast.R;
-import com.dovar.dovatoast.lib.DToast;
+
+import com.dovar.dtoast.DToast;
+import com.dovar.dtoast.R;
 
 import java.lang.reflect.Field;
 
 /**
  * @Date: 2018/11/19
  * @Author: heweizong
- * @Description: 使用 {@link android.widget.Toast}
+ * @Description: 使用 {@link Toast}
  */
 public class SystemToast implements IToast, Cloneable {
     /**

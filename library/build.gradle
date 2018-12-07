@@ -1,26 +1,30 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'com.github.dovar'
+version = '1.0.0'
 
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.2"
 
+
     defaultConfig {
-        applicationId "com.dovar.dtoast"
         minSdkVersion 19
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:26+'
-    compile project(':library')
 }

@@ -5,7 +5,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
 
-import com.dovar.dovatoast.lib.DToast;
+import com.dovar.dtoast.DToast;
+
 
 /**
  * @Date: 2018/11/13
