@@ -399,6 +399,26 @@ API26：（PhoneWindowManager.java源码）
 
     DToast的弹窗策略就是同一时间最多只展示一个弹窗，逻辑上就避免了此问题。因此仅捕获该异常。
 
+## 通过Gradle引用本库
+
+Step 1. Add the JitPack repository to your build file
+
+Add it in your root build.gradle at the end of repositories:
+
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+
+Step 2. Add the dependency
+
+	dependencies {
+	        implementation 'com.github.Dovar66:DToast:1.0.3'
+	}
+
+
 ## TODO LIST:
 
 * 增加适配应用已获取到悬浮窗权限的情况
