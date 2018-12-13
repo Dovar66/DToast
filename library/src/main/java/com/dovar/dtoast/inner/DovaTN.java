@@ -107,6 +107,7 @@ class DovaTN extends Handler {
             WindowManager windowManager = toast.getWMManager();
             if (windowManager != null) {
                 try {
+                    Log.d("DToast", "removeInternal: removeView");
                     windowManager.removeView(toast.getView());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -168,7 +169,13 @@ class DovaTN extends Handler {
                 }
                 //再将contentView添加到WindowManager
                 try {
+                    Log.d("DToast", "displayToast: addView");
                     windowManager.addView(toastView, toast.getWMParams());
+
+                    //确定展示成功后
+                    toast.isShowing = true;
+                    //展示到时间后移除
+                    sendRemoveMsgDelay(toast);
                 } catch (Exception e) {
                     e.printStackTrace();
                     if (e instanceof WindowManager.BadTokenException) {
@@ -176,6 +183,15 @@ class DovaTN extends Handler {
                         if (e.getMessage() != null && e.getMessage().contains("token null is not valid")) {
                             //尝试使用ActivityToast
                             if (toast.getContext() instanceof Activity && !(toast instanceof ActivityToast)) {
+                                try {
+                                    //因为未展示成功，主动移除
+                                    toastQueue.remove(toast);
+                                    removeMessages(REMOVE);
+                                    toast.isShowing=false;
+                                    windowManager.removeViewImmediate(toastView);
+                                }catch (Exception me){
+                                    me.printStackTrace();
+                                }
                                 new ActivityToast(toast.getContext())
                                         .setView(toastView)
                                         .setDuration(toast.getDuration())
@@ -185,10 +201,6 @@ class DovaTN extends Handler {
                         }
                     }
                 }
-                toast.isShowing = true;
-
-                //展示到时间后移除
-                sendRemoveMsgDelay(toast);
             } else {
                 //没有ContentView时直接移除
                 toastQueue.remove(toast);
