@@ -17,9 +17,11 @@ import com.dovar.dtoast.R;
  * @Date: 2018/11/13
  * @Author: heweizong
  * @Description: 解决通知权限被关闭时系统Toast无法正常展示的问题.
- * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link com.dovar.dtoast.inner.ActivityToast}
+ * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link ActivityToast}
  */
 public class DovaToast implements Cloneable, IToast {
+    static long Count4BadTokenException = 0;//记录DovaToast连续抛出token null is not valid异常的次数
+
     Context mContext;
     private View contentView;
     private int animation = android.R.style.Animation_Toast;
@@ -29,6 +31,7 @@ public class DovaToast implements Cloneable, IToast {
     private int width = WindowManager.LayoutParams.WRAP_CONTENT;
     private int height = WindowManager.LayoutParams.WRAP_CONTENT;
     private int priority;//优先级
+    private long timestamp;//时间戳
     private @DToast.Duration
     int duration = DToast.DURATION_SHORT;
     boolean isShowing;//TN标记为正在展示
@@ -152,6 +155,15 @@ public class DovaToast implements Cloneable, IToast {
         return this;
     }
 
+    long getTimestamp() {
+        return timestamp;
+    }
+
+    DovaToast setTimestamp(long mTimestamp) {
+        timestamp = mTimestamp;
+        return this;
+    }
+
     /**
      * Toast引用的contentView的可见性
      *
@@ -159,6 +171,11 @@ public class DovaToast implements Cloneable, IToast {
      */
     public boolean isShowing() {
         return isShowing && contentView != null && contentView.isShown();
+    }
+
+    //当DovaToast连续出现token null is not valid异常时，不再推荐使用DovaToast
+    public static boolean isBadChoice() {
+        return Count4BadTokenException >= 5;
     }
 
     @Override

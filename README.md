@@ -27,10 +27,14 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 ，这样的使用方式对于我们来说是最方便的啦。
 
 当然，使用DToast你也依然可以沿用这种封装方式，但这种方式在下面这个场景中可能会无法成功展示出弹窗(该场景下原生Toast也一样无法弹出)，
-不过请放心不会导致应用崩溃，而且这个场景出现的概率较小，有以下几个必要条件：1.通知栏权限被关闭(通知栏权限默认都是打开的) 
-2.非MIUI手机 3.你的应用设置的targetSdkVersion>=26 4.Android8.0以上的部分手机。
+不过请放心不会导致应用崩溃，而且这个场景出现的概率较小，有以下几个必要条件：
 
-不过，如果想要保证在所有场景下都能正常展示弹窗，还是建议在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。
+    1.通知栏权限被关闭(通知栏权限默认都是打开的)
+    2.非MIUI手机
+    3.你的应用设置的targetSdkVersion>=26
+    4.Android8.0以上的部分手机。
+
+所以，如果你的应用**targetSdkVersion>=26**，又想要保证在所有场景下都能正常展示弹窗，那么请在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。而targetSdkVersion小于26的同学可以放心使用ApplicationContext创建DToast。
 
 接下来再详细分析下上面提到的五个问题：
 

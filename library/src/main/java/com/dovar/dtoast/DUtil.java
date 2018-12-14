@@ -1,8 +1,9 @@
-package com.dovar.dtoast.inner;
+package com.dovar.dtoast;
 
 import android.os.Build;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +17,7 @@ import java.util.Properties;
  * @Author: heweizong
  * @Description:
  */
-public class Util {
+public class DUtil {
     private static final String KEY_MIUI_VERSION_CODE = "ro.miui.ui.version.code"; //小米
     private static final String KEY_MIUI_VERSION_NAME = "ro.miui.ui.version.name";
     private static final String KEY_MIUI_INTERNAL_STORAGE = "ro.miui.internal.storage";
@@ -65,5 +66,13 @@ public class Util {
         } catch (InvocationTargetException e) {
         }
         return defaultValue;
+    }
+
+    private static boolean enableLog = false;
+
+    public static void log(String info) {
+        if (enableLog && !TextUtils.isEmpty(info)) {
+            Log.d("DToast", info);
+        }
     }
 }
