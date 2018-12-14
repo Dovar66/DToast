@@ -15,6 +15,6 @@
         android:shadowRadius="2.75"
         android:textColor="#ffffff"
         android:textSize="14dp"
-        tools:text="这是一个Toast"/>
+        android:text="这是一个Toast"/>
 
 </RelativeLayout>
