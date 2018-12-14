@@ -55,6 +55,9 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 
 所以，如果你的应用**targetSdkVersion>=26**，又想要保证在所有场景下都能正常展示弹窗，那么请在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。而targetSdkVersion小于26的同学可以放心使用ApplicationContext创建DToast。
 
+(想了解为什么需要区别对待targetSdkVersion26+？看看API26到底做了什么[点击这里](https://developer.android.com/reference/android/os/Build.VERSION_CODES#O)&nbsp;&nbsp;&nbsp;
+如果你对targetSdkVersion的概念有疑问[点击这里](https://chinagdg.org/2016/01/picking-your-compilesdkversion-minsdkversion-targetsdkversion/))
+
 接下来再详细分析下上面提到的五个问题：
 
 ## 问题一：关闭通知权限时Toast不显示
