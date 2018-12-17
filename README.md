@@ -1,4 +1,4 @@
-# 通过Gradle引用本库
+# 通过Gradle引用
 
 Step 1. Add the JitPack repository to your build file
 
