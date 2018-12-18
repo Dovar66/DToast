@@ -51,6 +51,11 @@ public class SystemToast implements IToast, Cloneable {
     }
 
     @Override
+    public void showLong() {
+        this.setDuration(DToast.DURATION_LONG).show();
+    }
+
+    @Override
     public void cancel() {
         SystemTN.instance().cancelAll();
     }

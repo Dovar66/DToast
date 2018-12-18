@@ -72,6 +72,11 @@ public class DovaToast implements Cloneable, IToast {
         DovaTN.instance().add(this);
     }
 
+    @Override
+    public void showLong() {
+        this.setDuration(DToast.DURATION_LONG).show();
+    }
+
     /**
      * 取消Toast,会清除队列中所有Toast任务
      * 因为TN中使用的是{@link this#clone()}，外部没有Toast队列中单个任务的引用，所以外部无法单独取消一个Toast任务
