@@ -3,6 +3,8 @@ package com.dovar.dtoast.inner;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -51,7 +53,14 @@ public class DovaToast implements Cloneable, IToast {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.format = PixelFormat.TRANSLUCENT;
-        lp.type = WindowManager.LayoutParams.TYPE_TOAST;
+         //targetSdkVersion>=26且运行在8.0以上系统时，TYPE_TOAST可能会addView()失败，所以如果此条件下应用已获取到悬浮窗权限则使用TYPE_APPLICATION_OVERLAY
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Settings.canDrawOverlays(mContext)) {
+            //为什么是使用TYPE_APPLICATION_OVERLAY？
+            //因为8.0+系统，使用SYSTEM_ALERT_WINDOW 权限的应用无法再使用TYPE_PHONE、TYPE_SYSTEM_ALERT、TYPE_SYSTEM_OVERLAY等窗口类型来显示弹窗(permission denied for this window type)
+            lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            lp.type = WindowManager.LayoutParams.TYPE_TOAST;
+        }
         lp.height = this.height;
         lp.width = this.width;
         lp.windowAnimations = this.animation;
