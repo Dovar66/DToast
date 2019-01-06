@@ -13,6 +13,8 @@ import com.dovar.dtoast.DToast;
 public interface IToast {
     void show();
 
+    void showLong();
+
     void cancel();
 
     IToast setView(View mView);

@@ -3,6 +3,8 @@ package com.dovar.dtoast.inner;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,9 +19,11 @@ import com.dovar.dtoast.R;
  * @Date: 2018/11/13
  * @Author: heweizong
  * @Description: 解决通知权限被关闭时系统Toast无法正常展示的问题.
- * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link com.dovar.dtoast.inner.ActivityToast}
+ * 使用{@link DovaToast}出现{@link WindowManager.BadTokenException}时，再尝试使用{@link ActivityToast}
  */
 public class DovaToast implements Cloneable, IToast {
+    static long Count4BadTokenException = 0;//记录DovaToast连续抛出token null is not valid异常的次数
+
     Context mContext;
     private View contentView;
     private int animation = android.R.style.Animation_Toast;
@@ -29,6 +33,7 @@ public class DovaToast implements Cloneable, IToast {
     private int width = WindowManager.LayoutParams.WRAP_CONTENT;
     private int height = WindowManager.LayoutParams.WRAP_CONTENT;
     private int priority;//优先级
+    private long timestamp;//时间戳
     private @DToast.Duration
     int duration = DToast.DURATION_SHORT;
     boolean isShowing;//TN标记为正在展示
@@ -48,7 +53,14 @@ public class DovaToast implements Cloneable, IToast {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.format = PixelFormat.TRANSLUCENT;
-        lp.type = WindowManager.LayoutParams.TYPE_TOAST;
+         //targetSdkVersion>=26且运行在8.0以上系统时，TYPE_TOAST可能会addView()失败，所以如果此条件下应用已获取到悬浮窗权限则使用TYPE_APPLICATION_OVERLAY
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Settings.canDrawOverlays(mContext)) {
+            //为什么是使用TYPE_APPLICATION_OVERLAY？
+            //因为8.0+系统，使用SYSTEM_ALERT_WINDOW 权限的应用无法再使用TYPE_PHONE、TYPE_SYSTEM_ALERT、TYPE_SYSTEM_OVERLAY等窗口类型来显示弹窗(permission denied for this window type)
+            lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else {
+            lp.type = WindowManager.LayoutParams.TYPE_TOAST;
+        }
         lp.height = this.height;
         lp.width = this.width;
         lp.windowAnimations = this.animation;
@@ -67,6 +79,11 @@ public class DovaToast implements Cloneable, IToast {
     @Override
     public void show() {
         DovaTN.instance().add(this);
+    }
+
+    @Override
+    public void showLong() {
+        this.setDuration(DToast.DURATION_LONG).show();
     }
 
     /**
@@ -152,6 +169,15 @@ public class DovaToast implements Cloneable, IToast {
         return this;
     }
 
+    long getTimestamp() {
+        return timestamp;
+    }
+
+    DovaToast setTimestamp(long mTimestamp) {
+        timestamp = mTimestamp;
+        return this;
+    }
+
     /**
      * Toast引用的contentView的可见性
      *
@@ -159,6 +185,11 @@ public class DovaToast implements Cloneable, IToast {
      */
     public boolean isShowing() {
         return isShowing && contentView != null && contentView.isShown();
+    }
+
+    //当DovaToast连续出现token null is not valid异常时，不再推荐使用DovaToast
+    public static boolean isBadChoice() {
+        return Count4BadTokenException >= 5;
     }
 
     @Override

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.support.annotation.IntDef;
 import android.support.v4.app.NotificationManagerCompat;
 
-
+import com.dovar.dtoast.inner.ActivityToast;
 import com.dovar.dtoast.inner.DovaToast;
 import com.dovar.dtoast.inner.IToast;
 import com.dovar.dtoast.inner.SystemToast;
@@ -36,6 +36,10 @@ public class DToast {
         if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || SystemToast.isValid4HookINotificationManager() || DUtil.isMIUI()) {
             return new SystemToast(mContext);
         } else {//否则使用自定义Toast
+            if (mContext instanceof Activity && DovaToast.isBadChoice()) {
+                //检测到DovaToast连续多次抛出token null is not valid异常时，直接启用ActivityToast
+                return new ActivityToast(mContext);
+            }
             return new DovaToast(mContext);
         }
     }

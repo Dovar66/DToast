@@ -1,4 +1,23 @@
-# DToast
+# 通过Gradle引用
+
+Step 1. Add the JitPack repository to your build file
+
+Add it in your root build.gradle at the end of repositories:
+
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+
+Step 2. Add the dependency
+
+	dependencies {
+	        implementation 'com.github.Dovar66:DToast:1.1.0'
+	}
+
+# 正文
 
 先看看使用系统Toast存在的问题：
 
@@ -27,10 +46,18 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 ，这样的使用方式对于我们来说是最方便的啦。
 
 当然，使用DToast你也依然可以沿用这种封装方式，但这种方式在下面这个场景中可能会无法成功展示出弹窗(该场景下原生Toast也一样无法弹出)，
-不过请放心不会导致应用崩溃，而且这个场景出现的概率较小，有以下三个必要条件：1.通知栏权限被关闭(通知栏权限默认都是打开的) 
-2.非MIUI手机 3.Android8.0以上的部分手机(我最近测试中的几部8.0+设备都不存在该问题)。
+不过请放心不会导致应用崩溃，而且这个场景出现的概率较小，有以下几个必要条件：
 
-不过，如果想要保证在所有场景下都能正常展示弹窗，还是建议在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。
+    1.通知栏权限被关闭(通知栏权限默认都是打开的)
+    2.非MIUI手机
+    3.你的应用设置的targetSdkVersion>=26
+    4.Android8.0以上的部分手机。
+
+所以，如果你的应用**targetSdkVersion>=26**，又想要保证在所有场景下都能正常展示弹窗，那么请在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。而targetSdkVersion小于26的同学可以放心使用ApplicationContext创建DToast。
+
+想了解为什么需要区别对待targetSdkVersion26+？[点击查看API26做了什么](https://developer.android.com/reference/android/os/Build.VERSION_CODES#O)&nbsp;&nbsp;&nbsp;
+
+而如果你还不了解targetSdkVersion&nbsp;[点击这里查看](https://chinagdg.org/2016/01/picking-your-compilesdkversion-minsdkversion-targetsdkversion/)
 
 接下来再详细分析下上面提到的五个问题：
 
@@ -398,31 +425,6 @@ API26：（PhoneWindowManager.java源码）
 ## 问题五：Android7.1之后，不允许同时展示两个TYPE_TOAST弹窗
 
     DToast的弹窗策略就是同一时间最多只展示一个弹窗，逻辑上就避免了此问题。因此仅捕获该异常。
-
-## 通过Gradle引用本库
-
-Step 1. Add the JitPack repository to your build file
-
-Add it in your root build.gradle at the end of repositories:
-
-	allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
-
-Step 2. Add the dependency
-
-	dependencies {
-	        implementation 'com.github.Dovar66:DToast:1.0.3'
-	}
-
-
-## TODO LIST:
-
-* 增加适配应用已获取到悬浮窗权限的情况
-* 考虑是否需要支持同时展示多个弹窗
 
 ## 其他建议
 

@@ -9,20 +9,10 @@ android {
 
 
     defaultConfig {
-        targetSdkVersion 27
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion 9
     }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
 }
 
 dependencies {
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation "com.android.support:support-v4:27.1.1"
 }
