@@ -4,17 +4,21 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-
 import com.dovar.dtoast.DToast;
+import com.dovar.dtoast.DUtil;
 import com.dovar.dtoast.R;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 /**
  * @Date: 2018/11/19
@@ -61,9 +65,11 @@ public class SystemToast implements IToast, Cloneable {
 
     //不允许被外部调用
     void showInternal() {
+        if (mContext == null) return;
         mToast = Toast.makeText(mContext, "", Toast.LENGTH_SHORT);
         hookHandler(mToast);
         copyToToast(mToast);
+        hookINotificationManager(mToast, mContext);
         mToast.show();
     }
 
@@ -172,7 +178,7 @@ public class SystemToast implements IToast, Cloneable {
 
     //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
     static void hookHandler(Toast toast) {
-        if (Build.VERSION.SDK_INT >= 26) return;
+        if (toast == null || Build.VERSION.SDK_INT >= 26) return;
         try {
             Field sField_TN = Toast.class.getDeclaredField("mTN");
             sField_TN.setAccessible(true);
@@ -193,7 +199,7 @@ public class SystemToast implements IToast, Cloneable {
             Object mTN = getField(toast, "mTN");
             if (mTN != null) {
                 Object mParams = getField(mTN, "mParams");
-                if (mParams != null && mParams instanceof WindowManager.LayoutParams) {
+                if (mParams instanceof WindowManager.LayoutParams) {
                     WindowManager.LayoutParams params = (WindowManager.LayoutParams) mParams;
                     params.windowAnimations = animRes;
                 }
@@ -217,4 +223,55 @@ public class SystemToast implements IToast, Cloneable {
         }
         return null;
     }
+
+    private static Object iNotificationManagerProxy;
+
+    /**
+     * hook INotificationManager
+     */
+    private static void hookINotificationManager(Toast toast, @NonNull Context mContext) {
+        if (toast == null) return;
+        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || DUtil.isMIUI())
+            return;
+        if (isValid4HookINotificationManager()) {
+            if (iNotificationManagerProxy != null) return;//代理不为空说明之前已设置成功
+            try {
+                //生成INotificationManager代理
+                Method getServiceMethod = Toast.class.getDeclaredMethod("getService");
+                getServiceMethod.setAccessible(true);
+                final Object iNotificationManagerObj = getServiceMethod.invoke(null);
+
+                Class iNotificationManagerCls = Class.forName("android.app.INotificationManager");
+                iNotificationManagerProxy = Proxy.newProxyInstance(toast.getClass().getClassLoader(), new Class[]{iNotificationManagerCls}, new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        DUtil.log(method.getName());
+                        if ("enqueueToast".equals(method.getName()) || "enqueueToastEx".equals(method.getName())//华为p20 pro上为enqueueToastEx
+                                || "cancelToast".equals(method.getName())
+                                ) {
+                            args[0] = "android";
+                        }
+                        return method.invoke(iNotificationManagerObj, args);
+                    }
+                });
+
+                //使INotificationManager代理生效
+                Field sServiceFiled = Toast.class.getDeclaredField("sService");
+                sServiceFiled.setAccessible(true);
+                sServiceFiled.set(toast, iNotificationManagerProxy);
+            } catch (Exception e) {
+                iNotificationManagerProxy = null;
+                DUtil.log("hook INotificationManager error:" + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 建议只在8.0和8.1版本下采用Hook INotificationManager的方案
+     * 因为8.0以下时DovaToast可以完美处理，而9.0及以上时Android不允许使用非公开api
+     */
+    public static boolean isValid4HookINotificationManager() {
+        return Build.VERSION.SDK_INT == Build.VERSION_CODES.O || Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1;
+    }
+
 }

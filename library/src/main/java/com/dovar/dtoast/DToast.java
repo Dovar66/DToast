@@ -9,7 +9,6 @@ import android.support.v4.app.NotificationManagerCompat;
 import com.dovar.dtoast.inner.DovaToast;
 import com.dovar.dtoast.inner.IToast;
 import com.dovar.dtoast.inner.SystemToast;
-import com.dovar.dtoast.inner.Util;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -34,7 +33,7 @@ public class DToast {
         if (mContext == null) return null;
         //如果有通知权限，直接使用系统Toast
         //MIUI系统没有通知权限时系统Toast也能正常展示
-        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || Util.isMIUI()) {
+        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || SystemToast.isValid4HookINotificationManager() || DUtil.isMIUI()) {
             return new SystemToast(mContext);
         } else {//否则使用自定义Toast
             return new DovaToast(mContext);
