@@ -198,8 +198,9 @@ class DovaTN extends Handler {
             //展示到时间后移除
             sendRemoveMsgDelay(toast);
         } catch (Exception e) {
-            if (e instanceof WindowManager.BadTokenException &&
-                    e.getMessage() != null && e.getMessage().contains("token null is not valid")) {
+            if (e instanceof WindowManager.BadTokenException
+                    && e.getMessage() != null
+                    && (e.getMessage().contains("token null is not valid") || e.getMessage().contains("is your activity running"))) {
                 if (toast instanceof ActivityToast) {
                     //如果ActivityToast也无法展示的话，暂时只能选择放弃治疗了，难受...
                     DovaToast.Count4BadTokenException = 0;

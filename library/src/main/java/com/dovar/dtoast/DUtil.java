@@ -21,22 +21,15 @@ public class DUtil {
     private static final String KEY_MIUI_VERSION_CODE = "ro.miui.ui.version.code"; //小米
     private static final String KEY_MIUI_VERSION_NAME = "ro.miui.ui.version.name";
     private static final String KEY_MIUI_INTERNAL_STORAGE = "ro.miui.internal.storage";
-    private static final boolean OS_MIUI;
-
-    static {
-        OS_MIUI = isMIUIOS();
-    }
-
-    public static boolean isMIUI() {
-        return OS_MIUI;
-    }
+    private static int OS_MIUI = -1;//1为true 0为false
 
     /**
      * 小米系统
      *
      * @return
      */
-    static boolean isMIUIOS() {
+    public static boolean isMIUI() {
+        if (OS_MIUI != -1) return OS_MIUI == 1;
         boolean isMIUI = false;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
             try {
@@ -60,6 +53,7 @@ public class DUtil {
                     || prop.getProperty(KEY_MIUI_VERSION_NAME, null) != null
                     || prop.getProperty(KEY_MIUI_INTERNAL_STORAGE, null) != null;
         }
+        OS_MIUI = isMIUI ? 1 : 0;
         return isMIUI;
     }
 

@@ -14,7 +14,7 @@ Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 
 	dependencies {
-	        implementation 'com.github.Dovar66:DToast:1.1.0'
+	        implementation 'com.github.Dovar66:DToast:1.1.2'
 	}
 
 # 正文
@@ -30,14 +30,14 @@ Step 2. Add the dependency
 当发现系统Toast存在问题时，不少同学都会采用自定义的TYPE_TOAST弹窗来实现相同效果。虽然大部分情况下效果都是
 OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 
-    4.Android8.0之后的token null is not valid问题(实测部分机型问题)；
+    4.Android8.0之后的token null is not valid问题；
 
     5.Android7.1之后，不允许同时展示两个TYPE_TOAST弹窗(实测部分机型问题)。
 
 那么，DToast使用的解决方案是：
 
     1.通知权限未被关闭时，使用SystemToast(修复了问题2和问题3的系统Toast);
-    2.通知权限被关闭时，使用DovaToast(自定义的TYPE_TOAST弹窗);
+    2.通知权限被关闭时，如果系统版本为Android8.0/8.1则通过hook绕过通知栏权限，否则使用DovaToast(自定义的TYPE_TOAST弹窗);
     3.当使用DovaToast出现token null is not valid时，尝试使用ActivityToast(自定义的TYPE_APPLICATION_ATTACHED_DIALOG
     弹窗，只有当传入Context为Activity时，才会启用ActivityToast).
 
@@ -48,10 +48,10 @@ OK的，但其实TYPE_TOAST弹窗依然存在兼容问题：
 当然，使用DToast你也依然可以沿用这种封装方式，但这种方式在下面这个场景中可能会无法成功展示出弹窗(该场景下原生Toast也一样无法弹出)，
 不过请放心不会导致应用崩溃，而且这个场景出现的概率较小，有以下几个必要条件：
 
-    1.通知栏权限被关闭(通知栏权限默认都是打开的)
-    2.非MIUI手机
-    3.你的应用设置的targetSdkVersion>=26
-    4.Android8.0以上的部分手机。
+    1.你的应用设置的targetSdkVersion>=26.
+    2.通知栏权限被关闭(通知栏权限默认都是打开的).
+    3.非MIUI设备(MIUI弹吐司不需要通知栏权限).
+    4.运行设备的系统版本在Android9.0及以上。
 
 所以，如果你的应用**targetSdkVersion>=26**，又想要保证在所有场景下都能正常展示弹窗，那么请在DToast.make(context)时传入Activity作为上下文，这样在该场景下DToast会启用ActivityToast展示出弹窗。而targetSdkVersion小于26的同学可以放心使用ApplicationContext创建DToast。
 
@@ -416,7 +416,6 @@ API26：（PhoneWindowManager.java源码）
                     == PERMISSION_GRANTED ? ADD_OKAY : ADD_PERMISSION_DENIED;
         }
     }
-
 为了解决问题一，DovaToast不得不选择绕过NotificationManagerService的控制，但由于windowToken是NMS生成的，
 绕过NMS就无法获取到有效的windowToken，于是作为TYPE_TOAST的DovaToast就可能陷入第四个问题。因此，DToast选择在DovaToast出现
 该问题时引入ActivityToast，在DovaToast无法正常展示时创建一个依附于Activity的弹窗展示出来，不过ActivityToast只会展示在当前Activity，不具有跨页面功能。
@@ -430,3 +429,10 @@ API26：（PhoneWindowManager.java源码）
 
 * 新项目做应用架构的时候可以考虑把整个应用(除闪屏页等特殊界面外)做成只有一个Activity，其他全是Fragment，这样就不存在悬浮窗的问题啦。
 * 如果能够接受Toast不跨界面的话，建议使用SnackBar
+
+## 最新版本(1.1.2)
+
+    新增思路：对系统Toast的INotificationManager对象进行hook可以成功绕过通知栏权限，但9.0之后Android限制调用非公开API，所以9.0之后此方法不可用。
+    代码更新：新增hook INotificationManager操作，在Android8.0/8.1上采用hook方式绕过通知栏权限。
+
+
