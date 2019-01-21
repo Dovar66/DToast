@@ -435,4 +435,4 @@ API26：（PhoneWindowManager.java源码）
     新增思路：对Toast的INotificationManager对象进行hook可以成功绕过通知栏权限，但9.0之后Android限制调用非公开API，所以9.0之后此方法不可用。
     代码更新：新增hook INotificationManager操作，在Android8.0/8.1上采用hook方式绕过通知栏权限。
 
-
+我最新开源的项目：[完美支持多进程的组件化方案 ](https://github.com/Dovar66/DRouter)
