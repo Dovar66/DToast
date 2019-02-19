@@ -14,7 +14,7 @@ Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 
 	dependencies {
-	        implementation 'com.github.Dovar66:DToast:1.1.2'
+	        implementation 'com.github.Dovar66:DToast:1.1.3'
 	}
 
 # 正文
@@ -430,9 +430,12 @@ API26：（PhoneWindowManager.java源码）
 * 新项目做应用架构的时候可以考虑把整个应用(除闪屏页等特殊界面外)做成只有一个Activity，其他全是Fragment，这样就不存在悬浮窗的问题啦。
 * 如果能够接受Toast不跨界面的话，建议使用SnackBar
 
-## 最新版本(1.1.2)
+## 更新日志
 
-    新增思路：对Toast的INotificationManager对象进行hook可以成功绕过通知栏权限，但9.0之后Android限制调用非公开API，所以9.0之后此方法不可用。
-    代码更新：新增hook INotificationManager操作，在Android8.0/8.1上采用hook方式绕过通知栏权限。
+    1.1.3
+        [修复]issue#7
+    1.1.2
+        新增思路：对Toast的INotificationManager对象进行hook可以成功绕过通知栏权限，但9.0之后Android限制调用非公开API，所以9.0之后此方法不可用。
+        代码更新：新增hook INotificationManager操作，在Android8.0/8.1上采用hook方式绕过通知栏权限。
 
-我最新开源的项目：[完美支持多进程的组件化方案 ](https://github.com/Dovar66/DRouter)
+我的其他项目：[简单易用的支持多进程架构的组件化方案 ](https://github.com/Dovar66/DRouter)
