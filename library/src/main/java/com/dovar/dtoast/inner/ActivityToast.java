@@ -25,11 +25,6 @@ public class ActivityToast extends DovaToast {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.format = PixelFormat.TRANSLUCENT;
-
-//        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
-        lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;//此方案是否更优？
-//            mParams.y = mToast.getYOffset() + getNavBarHeight();
-
         lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.windowAnimations = android.R.style.Animation_Toast;

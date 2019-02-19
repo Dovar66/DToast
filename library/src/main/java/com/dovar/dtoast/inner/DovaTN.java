@@ -123,7 +123,7 @@ class DovaTN extends Handler {
             if (windowManager != null) {
                 try {
                     DUtil.log("removeInternal: removeView");
-                    windowManager.removeView(toast.getView());
+                    windowManager.removeViewImmediate(toast.getView());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
