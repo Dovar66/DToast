@@ -3,43 +3,39 @@ package com.dovar.dovatoast;
 import android.content.Context;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.TextView;
 
 import com.dovar.dtoast.DToast;
-import com.dovar.dtoast.inner.IToast;
 
 
 /**
  * @Date: 2018/11/13
  * @Author: heweizong
- * @Description:
+ * @Description: 简单封装
  */
 public class ToastUtil {
 
+    /**
+     * 使用默认布局
+     */
     public static void show(Context mContext, String msg) {
-        if (mContext == null) return;
-        if (msg == null) return;
-        IToast toast=DToast.make(mContext);
-        TextView tv_text = (TextView) toast.getView().findViewById(R.id.tv_content);
-        if (tv_text != null) {
-            tv_text.setText(msg);
-        }
-        toast.setGravity(Gravity.BOTTOM|Gravity.CENTER,0,30).show();
+        if (mContext == null || msg == null) return;
+        DToast.make(mContext)
+                .setText(R.id.tv_content_default, msg)
+                .setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 30)
+                .show();
     }
 
 
+    /**
+     * 通过setView()设置自定义的Toast布局
+     */
     public static void showAtCenter(Context mContext, String msg) {
-        if (mContext == null) return;
-        if (msg == null) return;
-        View toastRoot = View.inflate(mContext, R.layout.layout_toast_center, null);
-        TextView tv_text = (TextView) toastRoot.findViewById(R.id.tv_content);
-        if (tv_text != null) {
-            tv_text.setText(msg);
-        }
+        if (mContext == null || msg == null) return;
         DToast.make(mContext)
-                .setView(toastRoot)
+                .setView(View.inflate(mContext, R.layout.layout_toast_center, null))
+                .setText(R.id.tv_content_custom, msg)
                 .setGravity(Gravity.CENTER, 0, 0)
-                .show();
+                .showLong();
     }
 
     //退出APP时调用

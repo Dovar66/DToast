@@ -71,7 +71,7 @@ public class DUtil {
         return defaultValue;
     }
 
-    private static boolean enableLog = false;
+    protected static boolean enableLog = false;
 
     public static void log(String info) {
         if (enableLog && !TextUtils.isEmpty(info)) {

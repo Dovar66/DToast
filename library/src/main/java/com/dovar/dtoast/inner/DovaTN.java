@@ -19,7 +19,7 @@ import java.util.Comparator;
  * @Description:
  */
 class DovaTN extends Handler {
-    final static int REMOVE = 2;
+    private final static int REMOVE = 2;
 
     private final DPriorityQueue<DovaToast> toastQueue;//列表中成员要求非空
 
@@ -123,7 +123,7 @@ class DovaTN extends Handler {
             if (windowManager != null) {
                 try {
                     DUtil.log("removeInternal: removeView");
-                    windowManager.removeViewImmediate(toast.getView());
+                    windowManager.removeViewImmediate(toast.getViewInternal());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -175,7 +175,7 @@ class DovaTN extends Handler {
     private void displayToast(@NonNull DovaToast toast) {
         WindowManager windowManager = toast.getWMManager();
         if (windowManager == null) return;
-        View toastView = toast.getView();
+        View toastView = toast.getViewInternal();
         if (toastView == null) {
             //没有ContentView时直接移除
             toastQueue.remove(toast);

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/tv_content"
+        android:id="@+id/tv_content_custom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="#cc000000"
@@ -17,5 +16,5 @@
         android:shadowRadius="2.75"
         android:textColor="#ffffff"
         android:textSize="14dp"
-        tools:text="这是一个Toast"/>
+        tools:text="这是一个Toast" />
 </RelativeLayout>

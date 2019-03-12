@@ -1,5 +1,6 @@
 package com.dovar.dtoast.inner;
 
+import android.support.annotation.IdRes;
 import android.view.View;
 
 import com.dovar.dtoast.DToast;
@@ -31,4 +32,5 @@ public interface IToast {
 
     IToast setPriority(int mPriority);
 
+    IToast setText(@IdRes int id,String text);
 }

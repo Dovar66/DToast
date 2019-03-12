@@ -21,6 +21,10 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class DToast {
 
+    public static void enableLog(boolean enable) {
+        DUtil.enableLog = enable;
+    }
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({DURATION_SHORT, DURATION_LONG})
     public @interface Duration {

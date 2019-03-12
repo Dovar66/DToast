@@ -6,9 +6,9 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dovar.dtoast.DToast;
@@ -27,30 +27,27 @@ import java.lang.reflect.Proxy;
  */
 public class SystemToast implements IToast, Cloneable {
     /**
-     * 在{@link SystemTN#displayToast(SystemToast)}中才被初始化
+     * mToast在{@link SystemTN#displayToast(SystemToast)}中才被初始化
      */
     private Toast mToast;
-    private int priority;//优先级
-
     private Context mContext;
     private View contentView;
+    private int priority;//优先级
     private int animation = android.R.style.Animation_Toast;
     private int gravity = Gravity.BOTTOM | Gravity.CENTER;
     private int xOffset;
     private int yOffset;
-    private @DToast.Duration
-    int duration = DToast.DURATION_SHORT;
+    private int duration = DToast.DURATION_SHORT;
 
     public SystemToast(@NonNull Context mContext) {
         this.mContext = mContext;
-        LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (layoutInflater == null) throw new RuntimeException("LayoutInflater is null!");
-        this.contentView = layoutInflater.inflate(R.layout.layout_toast, null);
     }
 
     //外部调用
     @Override
     public void show() {
+        //此时如果还未设置contentView则使用内置布局
+        assertContentViewNotNull();
         SystemTN.instance().add(this);
     }
 
@@ -70,11 +67,18 @@ public class SystemToast implements IToast, Cloneable {
 
     //不允许被外部调用
     void showInternal() {
-        if (mContext == null) return;
-        mToast = Toast.makeText(mContext, "", Toast.LENGTH_SHORT);
+        if (mContext == null || contentView == null) return;
+        mToast = new Toast(mContext);
+        mToast.setView(contentView);
+        mToast.setGravity(gravity, xOffset, yOffset);
+        if (duration == DToast.DURATION_LONG) {
+            mToast.setDuration(Toast.LENGTH_LONG);
+        } else {
+            mToast.setDuration(Toast.LENGTH_SHORT);
+        }
         hookHandler(mToast);
-        copyToToast(mToast);
         hookINotificationManager(mToast, mContext);
+        setupToastAnim(mToast, this.animation);
         mToast.show();
     }
 
@@ -85,29 +89,26 @@ public class SystemToast implements IToast, Cloneable {
         }
     }
 
-    private void copyToToast(Toast toast) {
-        if (toast == null) return;
-        if (contentView != null) {
-            toast.setView(this.contentView);
-        }
-        toast.setGravity(this.gravity, xOffset, yOffset);
-        setupToastAnim(toast, this.animation);
-        if (duration == DToast.DURATION_SHORT) {
-            toast.setDuration(Toast.LENGTH_SHORT);
-        } else if (duration == DToast.DURATION_LONG) {
-            toast.setDuration(Toast.LENGTH_LONG);
-        }
-    }
-
     @Override
     public SystemToast setView(View mView) {
+        if (mView == null) {
+            DUtil.log("contentView cannot be null!");
+            return this;
+        }
         this.contentView = mView;
         return this;
     }
 
     @Override
     public View getView() {
-        return this.contentView;
+        return assertContentViewNotNull();
+    }
+
+    private View assertContentViewNotNull() {
+        if (contentView == null) {
+            contentView = View.inflate(mContext, R.layout.layout_toast, null);
+        }
+        return contentView;
     }
 
     @Override
@@ -163,7 +164,16 @@ public class SystemToast implements IToast, Cloneable {
     }
 
     @Override
-    protected SystemToast clone() {
+    public IToast setText(int id, String text) {
+        TextView tv = assertContentViewNotNull().findViewById(id);
+        if (tv != null) {
+            tv.setText(text);
+        }
+        return this;
+    }
+
+    @Override
+    public SystemToast clone() {
         SystemToast mToast = null;
         try {
             mToast = (SystemToast) super.clone();
@@ -182,7 +192,7 @@ public class SystemToast implements IToast, Cloneable {
     }
 
     //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
-    static void hookHandler(Toast toast) {
+    private static void hookHandler(Toast toast) {
         if (toast == null || Build.VERSION.SDK_INT >= 26) return;
         try {
             Field sField_TN = Toast.class.getDeclaredField("mTN");
@@ -199,7 +209,7 @@ public class SystemToast implements IToast, Cloneable {
     }
 
     //设置Toast动画
-    static void setupToastAnim(Toast toast, int animRes) {
+    private static void setupToastAnim(Toast toast, int animRes) {
         try {
             Object mTN = getField(toast, "mTN");
             if (mTN != null) {
