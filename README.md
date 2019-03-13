@@ -14,7 +14,7 @@ Add it in your root build.gradle at the end of repositories:
 Step 2. Add the dependency
 
 	dependencies {
-	        implementation 'com.github.Dovar66:DToast:1.1.3'
+	        implementation 'com.github.Dovar66:DToast:1.1.5'
 	}
 
 # 使用示例
@@ -447,6 +447,9 @@ API26：（PhoneWindowManager.java源码）
 
 ## 更新日志
 
+    1.1.5
+        新增IToast.setText(idRes,text)方法
+        [修复]issue#6
     1.1.3
         [修复]issue#7
     1.1.2
