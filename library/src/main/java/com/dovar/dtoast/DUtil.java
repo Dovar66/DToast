@@ -18,6 +18,23 @@ import java.util.Properties;
  * @Description:
  */
 public class DUtil {
+    protected static boolean enableLog = false;
+
+    public static void log(String info) {
+        if (enableLog && !TextUtils.isEmpty(info)) {
+            Log.d("DToast", info);
+        }
+    }
+
+    /**
+     * 检查当前设备是否在白名单列表中
+     * <p>
+     * 白名单中的设备在没有通知权限时系统Toast也能正常展示
+     */
+    public static boolean isWhiteList() {
+        return isMIUI() || is1707A01();
+    }
+
     private static final String KEY_MIUI_VERSION_CODE = "ro.miui.ui.version.code"; //小米
     private static final String KEY_MIUI_VERSION_NAME = "ro.miui.ui.version.name";
     private static final String KEY_MIUI_INTERNAL_STORAGE = "ro.miui.internal.storage";
@@ -25,10 +42,8 @@ public class DUtil {
 
     /**
      * 小米系统
-     *
-     * @return
      */
-    public static boolean isMIUI() {
+    private static boolean isMIUI() {
         if (OS_MIUI != -1) return OS_MIUI == 1;
         boolean isMIUI = false;
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
@@ -71,11 +86,20 @@ public class DUtil {
         return defaultValue;
     }
 
-    protected static boolean enableLog = false;
+    /**
+     * 360手机
+     */
+    private static boolean is360() {
+        String manufacturer = Build.MANUFACTURER.toUpperCase();
+        return "360".equals(manufacturer) || "QIKU".equals(manufacturer);
+    }
 
-    public static void log(String info) {
-        if (enableLog && !TextUtils.isEmpty(info)) {
-            Log.d("DToast", info);
-        }
+    /**
+     * 机型：360 1707-A01
+     * 在该机型上关闭通知权限并不会导致系统Toast无法弹出，与MIUI类似，所以也加入白名单
+     * 关联issue#6
+     */
+    private static boolean is1707A01() {
+        return is360() && "1707-A01".equals(Build.MODEL.toUpperCase());
     }
 }

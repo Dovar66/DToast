@@ -1,4 +1,4 @@
-# 通过Gradle引用
+# Gradle引用
 
 Step 1. Add the JitPack repository to your build file
 
@@ -17,7 +17,22 @@ Step 2. Add the dependency
 	        implementation 'com.github.Dovar66:DToast:1.1.3'
 	}
 
-# 正文
+# 使用示例
+
+    //使用默认布局
+    DToast.make(mContext)
+           .setText(R.id.tv_content_default, msg)
+           .setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 30)
+           .show();
+           
+    //通过setView()设置自定义的Toast布局            
+    DToast.make(mContext)
+           .setView(View.inflate(mContext, R.layout.layout_toast_center, null))
+           .setText(R.id.tv_content_custom, msg)
+           .setGravity(Gravity.CENTER, 0, 0)
+           .showLong();
+
+# 正文分析
 
 先看看使用系统Toast存在的问题：
 

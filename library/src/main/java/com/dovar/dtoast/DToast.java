@@ -36,8 +36,8 @@ public class DToast {
     public static IToast make(Context mContext) {
         if (mContext == null) return null;
         //如果有通知权限，直接使用系统Toast
-        //MIUI系统没有通知权限时系统Toast也能正常展示
-        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || SystemToast.isValid4HookINotificationManager() || DUtil.isMIUI()) {
+        //白名单中的机型没有通知权限时系统Toast也能正常展示
+        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || SystemToast.isValid4HookINotificationManager() || DUtil.isWhiteList()) {
             return new SystemToast(mContext);
         } else {//否则使用自定义Toast
             if (mContext instanceof Activity && DovaToast.isBadChoice()) {

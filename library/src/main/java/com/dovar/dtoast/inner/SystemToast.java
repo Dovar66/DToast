@@ -246,7 +246,7 @@ public class SystemToast implements IToast, Cloneable {
      */
     private static void hookINotificationManager(Toast toast, @NonNull Context mContext) {
         if (toast == null) return;
-        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || DUtil.isMIUI())
+        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || DUtil.isWhiteList())
             return;
         if (isValid4HookINotificationManager()) {
             if (iNotificationManagerProxy != null) return;//代理不为空说明之前已设置成功
