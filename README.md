@@ -15,6 +15,7 @@ Step 2. Add the dependency
 
 	dependencies {
 	        implementation 'com.github.Dovar66:DToast:1.1.5'
+		//implementation 'com.github.Dovar66:DToast:1.1.6'//for androidx
 	}
 
 # 使用示例
