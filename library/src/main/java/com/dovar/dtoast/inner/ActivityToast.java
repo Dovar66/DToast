@@ -3,8 +3,9 @@ package com.dovar.dtoast.inner;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
-import android.support.annotation.NonNull;
 import android.view.WindowManager;
+
+import androidx.annotation.NonNull;
 
 /**
  * @Date: 2018/11/20

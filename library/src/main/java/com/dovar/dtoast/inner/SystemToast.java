@@ -3,8 +3,9 @@ package com.dovar.dtoast.inner;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationManagerCompat;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationManagerCompat;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;

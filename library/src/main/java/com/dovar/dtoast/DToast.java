@@ -2,8 +2,6 @@ package com.dovar.dtoast;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.annotation.IntDef;
-import android.support.v4.app.NotificationManagerCompat;
 
 import com.dovar.dtoast.inner.ActivityToast;
 import com.dovar.dtoast.inner.DovaToast;
@@ -12,6 +10,9 @@ import com.dovar.dtoast.inner.SystemToast;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.IntDef;
+import androidx.core.app.NotificationManagerCompat;
 
 /**
  * @Date: 2018/11/26

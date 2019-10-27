@@ -3,7 +3,6 @@ package com.dovar.dtoast.inner;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewManager;
 import android.view.ViewParent;
@@ -12,6 +11,8 @@ import android.view.WindowManager;
 import com.dovar.dtoast.DUtil;
 
 import java.util.Comparator;
+
+import androidx.annotation.NonNull;
 
 /**
  * @Date: 2018/11/13

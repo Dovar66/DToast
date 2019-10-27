@@ -1,11 +1,12 @@
 package com.dovar.dovatoast;
 
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
 import com.dovar.dtoast.DToast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class SecondActivity extends AppCompatActivity implements View.OnClickListener{
 

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -14,6 +13,8 @@ import android.widget.TextView;
 import com.dovar.dtoast.DToast;
 import com.dovar.dtoast.DUtil;
 import com.dovar.dtoast.R;
+
+import androidx.annotation.NonNull;
 
 
 /**

@@ -2,9 +2,10 @@ package com.dovar.dtoast.inner;
 
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
 
 import java.util.LinkedList;
+
+import androidx.annotation.NonNull;
 
 /**
  * @Date: 2018/11/19
