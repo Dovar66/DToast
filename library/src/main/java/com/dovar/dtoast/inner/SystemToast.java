@@ -210,6 +210,7 @@ public class SystemToast implements IToast, Cloneable {
 
     //设置Toast动画
     private static void setupToastAnim(Toast toast, int animRes) {
+        if (toast == null || Build.VERSION.SDK_INT >= 28) return;
         try {
             Object mTN = getField(toast, "mTN");
             if (mTN != null) {
