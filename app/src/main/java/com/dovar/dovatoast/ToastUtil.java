@@ -20,7 +20,7 @@ public class ToastUtil {
     public static void show(Context mContext, String msg) {
         if (mContext == null || msg == null) return;
         DToast.make(mContext)
-                .setText(R.id.tv_content_default, msg)
+                .setText(msg)
                 .setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 30)
                 .show();
     }
@@ -33,7 +33,7 @@ public class ToastUtil {
         if (mContext == null || msg == null) return;
         DToast.make(mContext)
                 .setView(View.inflate(mContext, R.layout.layout_toast_center, null))
-                .setText(R.id.tv_content_custom, msg)
+                .setText(msg)
                 .setGravity(Gravity.CENTER, 0, 0)
                 .showLong();
     }

@@ -174,6 +174,12 @@ public class SystemToast implements IToast, Cloneable {
     }
 
     @Override
+    public IToast setText(String text) {
+        int id = mContext.getResources().getIdentifier("message", "id", "com.android.internal");
+        return setText(id, text);
+    }
+
+    @Override
     public SystemToast clone() {
         SystemToast mToast = null;
         try {
@@ -288,7 +294,7 @@ public class SystemToast implements IToast, Cloneable {
      * 因为8.0以下时DovaToast可以完美处理，而9.0及以上时Android不允许使用非公开api
      */
     public static boolean isValid4HookINotificationManager() {
-        return Build.VERSION.SDK_INT == Build.VERSION_CODES.O || Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1;
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
     }
 
 }

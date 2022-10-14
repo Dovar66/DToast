@@ -4,8 +4,9 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
+    <!--使用系统Toast布局transient_notification.xml中的id[issue#21]-->
     <TextView
-        android:id="@+id/tv_content_default"
+        android:id="@android:id/message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="10dp"

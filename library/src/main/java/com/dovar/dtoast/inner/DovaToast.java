@@ -190,6 +190,12 @@ public class DovaToast implements IToast, Cloneable {
         return this;
     }
 
+    @Override
+    public IToast setText(String text) {
+        int id = mContext.getResources().getIdentifier("message", "id", "com.android.internal");
+        return setText(id,text);
+    }
+
     long getTimestamp() {
         return timestamp;
     }

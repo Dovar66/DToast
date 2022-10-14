@@ -19,6 +19,7 @@ public interface IToast {
 
     void cancel();
 
+    //TextView的id必须是android:id="@android:id/message"
     IToast setView(View mView);
 
     View getView();
@@ -33,5 +34,8 @@ public interface IToast {
 
     IToast setPriority(int mPriority);
 
+    @Deprecated
     IToast setText(@IdRes int id, String text);
+
+    IToast setText(String text);
 }
