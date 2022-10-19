@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "com.dovar.dtoast"
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
     }

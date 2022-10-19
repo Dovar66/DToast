@@ -21,24 +21,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 if (isDestroyed() || isFinishing()) return;
-                ToastUtil.show(MainActivity.this, "Hello MainActivity!");
+                ToastUtil.show("Hello MainActivity!");
             }
         }, 500);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        ToastUtil.cancelAll();
     }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.tv_show) {
             if (new Random().nextInt() % 2 == 0) {
-                ToastUtil.show(this, "你是来搞笑的吗");
+                ToastUtil.show("你是来搞笑的吗");
             } else {
-                ToastUtil.showAtCenter(this, "哇咔咔。。");
+                ToastUtil.showAtCenter("哇咔咔。。");
             }
         } else {
             startActivity(new Intent(this, SecondActivity.class));

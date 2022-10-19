@@ -30,6 +30,8 @@ public interface IToast {
 
     IToast setGravity(int gravity, int xOffset, int yOffset);
 
+    //do not support
+    @Deprecated
     IToast setAnimation(int animation);
 
     IToast setPriority(int mPriority);

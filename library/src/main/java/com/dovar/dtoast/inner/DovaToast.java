@@ -3,18 +3,16 @@ package com.dovar.dtoast.inner;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
-import android.os.Build;
-import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import com.dovar.dtoast.DToast;
 import com.dovar.dtoast.DUtil;
 import com.dovar.dtoast.R;
-
-import androidx.annotation.NonNull;
 
 
 /**
@@ -30,7 +28,6 @@ public class DovaToast implements IToast, Cloneable {
     private View contentView;
     private int priority;//优先级
     private long timestamp;//时间戳
-    private int animation = android.R.style.Animation_Toast;
     private int gravity = Gravity.BOTTOM | Gravity.CENTER;
     private int xOffset;
     private int yOffset;
@@ -78,17 +75,10 @@ public class DovaToast implements IToast, Cloneable {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
         lp.format = PixelFormat.TRANSLUCENT;
-        //targetSdkVersion>=26且运行在8.0以上系统时，TYPE_TOAST可能会addView()失败，所以如果此条件下应用已获取到悬浮窗权限则使用TYPE_APPLICATION_OVERLAY
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Settings.canDrawOverlays(mContext)) {
-            //为什么是使用TYPE_APPLICATION_OVERLAY？
-            //因为8.0+系统，使用SYSTEM_ALERT_WINDOW 权限的应用无法再使用TYPE_PHONE、TYPE_SYSTEM_ALERT、TYPE_SYSTEM_OVERLAY等窗口类型来显示弹窗(permission denied for this window type)
-            lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            lp.type = WindowManager.LayoutParams.TYPE_TOAST;
-        }
+        lp.type = WindowManager.LayoutParams.TYPE_TOAST;
         lp.height = this.height;
         lp.width = this.width;
-        lp.windowAnimations = this.animation;
+        lp.windowAnimations = android.R.style.Animation_Toast;
         lp.gravity = this.gravity;
         lp.x = this.xOffset;
         lp.y = this.yOffset;
@@ -142,7 +132,7 @@ public class DovaToast implements IToast, Cloneable {
 
     @Override
     public DovaToast setAnimation(int animation) {
-        this.animation = animation;
+        //do nothing
         return this;
     }
 
@@ -183,17 +173,16 @@ public class DovaToast implements IToast, Cloneable {
 
     @Override
     public IToast setText(int id, String text) {
-        TextView tv = assertContentViewNotNull().findViewById(id);
-        if (tv != null) {
-            tv.setText(text);
-        }
-        return this;
+        return setText(text);
     }
 
     @Override
     public IToast setText(String text) {
-        int id = mContext.getResources().getIdentifier("message", "id", "com.android.internal");
-        return setText(id,text);
+        TextView tv = assertContentViewNotNull().findViewById(android.R.id.message);
+        if (tv != null) {
+            tv.setText(text);
+        }
+        return this;
     }
 
     long getTimestamp() {
@@ -221,22 +210,22 @@ public class DovaToast implements IToast, Cloneable {
 
     @Override
     public DovaToast clone() {
-        DovaToast mToast = null;
+        DovaToast mToast;
         try {
             mToast = (DovaToast) super.clone();
-            mToast.mContext = this.mContext;
-            mToast.contentView = this.contentView;
-            mToast.duration = this.duration;
-            mToast.animation = this.animation;
-            mToast.gravity = this.gravity;
-            mToast.height = this.height;
-            mToast.width = this.width;
-            mToast.xOffset = this.xOffset;
-            mToast.yOffset = this.yOffset;
-            mToast.priority = this.priority;
         } catch (CloneNotSupportedException mE) {
             mE.printStackTrace();
+            mToast = new DovaToast(mContext);
         }
+        mToast.mContext = this.mContext;
+        mToast.contentView = this.contentView;
+        mToast.duration = this.duration;
+        mToast.gravity = this.gravity;
+        mToast.height = this.height;
+        mToast.width = this.width;
+        mToast.xOffset = this.xOffset;
+        mToast.yOffset = this.yOffset;
+        mToast.priority = this.priority;
         return mToast;
     }
 }

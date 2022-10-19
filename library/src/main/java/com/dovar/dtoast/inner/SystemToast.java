@@ -3,18 +3,16 @@ package com.dovar.dtoast.inner;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationManagerCompat;
 import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.dovar.dtoast.DToast;
 import com.dovar.dtoast.DUtil;
-import com.dovar.dtoast.R;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -31,10 +29,11 @@ public class SystemToast implements IToast, Cloneable {
      * mToast在{@link SystemTN#displayToast(SystemToast)}中才被初始化
      */
     private Toast mToast;
+    @NonNull
     private Context mContext;
+    private String text = "";
     private View contentView;
     private int priority;//优先级
-    private int animation = android.R.style.Animation_Toast;
     private int gravity = Gravity.BOTTOM | Gravity.CENTER;
     private int xOffset;
     private int yOffset;
@@ -47,8 +46,6 @@ public class SystemToast implements IToast, Cloneable {
     //外部调用
     @Override
     public void show() {
-        //此时如果还未设置contentView则使用内置布局
-        assertContentViewNotNull();
         SystemTN.instance().add(this);
     }
 
@@ -68,18 +65,18 @@ public class SystemToast implements IToast, Cloneable {
 
     //不允许被外部调用
     void showInternal() {
-        if (mContext == null || contentView == null) return;
-        mToast = new Toast(mContext);
-        mToast.setView(contentView);
-        mToast.setGravity(gravity, xOffset, yOffset);
-        if (duration == DToast.DURATION_LONG) {
-            mToast.setDuration(Toast.LENGTH_LONG);
+        int realDuration = (duration == DToast.DURATION_LONG) ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT;
+        if (contentView != null) {
+            mToast = new Toast(mContext);
+            mToast.setView(contentView);
+            mToast.setDuration(realDuration);
+            findValidTextView(contentView).setText(text);
         } else {
-            mToast.setDuration(Toast.LENGTH_SHORT);
+            mToast = Toast.makeText(mContext, text, realDuration);
         }
+        mToast.setGravity(gravity, xOffset, yOffset);
         hookHandler(mToast);
         hookINotificationManager(mToast, mContext);
-        setupToastAnim(mToast, this.animation);
         mToast.show();
     }
 
@@ -102,12 +99,8 @@ public class SystemToast implements IToast, Cloneable {
 
     @Override
     public View getView() {
-        return assertContentViewNotNull();
-    }
-
-    private View assertContentViewNotNull() {
-        if (contentView == null) {
-            contentView = View.inflate(mContext, R.layout.layout_toast, null);
+        if (mToast != null) {
+            return mToast.getView();
         }
         return contentView;
     }
@@ -124,7 +117,7 @@ public class SystemToast implements IToast, Cloneable {
 
     @Override
     public SystemToast setAnimation(int animation) {
-        this.animation = animation;
+        //do nothing
         return this;
     }
 
@@ -166,41 +159,57 @@ public class SystemToast implements IToast, Cloneable {
 
     @Override
     public IToast setText(int id, String text) {
-        TextView tv = assertContentViewNotNull().findViewById(id);
-        if (tv != null) {
-            tv.setText(text);
-        }
-        return this;
+        return setText(text);
     }
 
     @Override
     public IToast setText(String text) {
-        int id = mContext.getResources().getIdentifier("message", "id", "com.android.internal");
-        return setText(id, text);
+        this.text = text;
+        return this;
+    }
+
+    TextView findValidTextView(View view) {
+        TextView result = null;
+        if (view instanceof TextView) {
+            if (view.getId() == View.NO_ID) {
+                view.setId(android.R.id.message);
+            }
+            if (view.getId() == android.R.id.message) {
+                result = (TextView) view;
+            }
+        } else {
+            result = view.findViewById(android.R.id.message);
+        }
+        if (result == null) {
+            //TextView的id必须是android:id="@android:id/message"
+            throw new RuntimeException("android.R.id.message not found in contentView");
+        }
+        return result;
     }
 
     @Override
     public SystemToast clone() {
-        SystemToast mToast = null;
+        SystemToast mToast;
         try {
             mToast = (SystemToast) super.clone();
-            mToast.mContext = this.mContext;
-            mToast.contentView = this.contentView;
-            mToast.duration = this.duration;
-            mToast.animation = this.animation;
-            mToast.gravity = this.gravity;
-            mToast.xOffset = this.xOffset;
-            mToast.yOffset = this.yOffset;
-            mToast.priority = this.priority;
         } catch (CloneNotSupportedException mE) {
             mE.printStackTrace();
+            mToast = new SystemToast(mContext);
         }
+        mToast.mContext = this.mContext;
+        mToast.text = this.text;
+        mToast.contentView = this.contentView;
+        mToast.duration = this.duration;
+        mToast.gravity = this.gravity;
+        mToast.xOffset = this.xOffset;
+        mToast.yOffset = this.yOffset;
+        mToast.priority = this.priority;
         return mToast;
     }
 
     //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
     private static void hookHandler(Toast toast) {
-        if (toast == null || Build.VERSION.SDK_INT >= 26) return;
+        if (toast == null || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) return;
         try {
             Field sField_TN = Toast.class.getDeclaredField("mTN");
             sField_TN.setAccessible(true);
@@ -215,63 +224,30 @@ public class SystemToast implements IToast, Cloneable {
         }
     }
 
-    //设置Toast动画
-    private static void setupToastAnim(Toast toast, int animRes) {
-        if (toast == null || Build.VERSION.SDK_INT >= 28) return;
-        try {
-            Object mTN = getField(toast, "mTN");
-            if (mTN != null) {
-                Object mParams = getField(mTN, "mParams");
-                if (mParams instanceof WindowManager.LayoutParams) {
-                    WindowManager.LayoutParams params = (WindowManager.LayoutParams) mParams;
-                    params.windowAnimations = animRes;
-                }
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 反射字段
-     *
-     * @param object    要反射的对象
-     * @param fieldName 要反射的字段名称
-     */
-    private static Object getField(Object object, String fieldName) throws Exception {
-        Field field = object.getClass().getDeclaredField(fieldName);
-        if (field != null) {
-            field.setAccessible(true);
-            return field.get(object);
-        }
-        return null;
-    }
-
     private static Object iNotificationManagerProxy;
 
     /**
      * hook INotificationManager
+     * android10应用在前台时，toast可以正常展示
      */
     private static void hookINotificationManager(Toast toast, @NonNull Context mContext) {
         if (toast == null) return;
-        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || DUtil.isWhiteList())
-            return;
-        if (isValid4HookINotificationManager()) {
+        if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || DUtil.isWhiteList()) return;
+        //android10开始被标记为私有api，禁止反射调用
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             if (iNotificationManagerProxy != null) return;//代理不为空说明之前已设置成功
             try {
                 //生成INotificationManager代理
                 Method getServiceMethod = Toast.class.getDeclaredMethod("getService");
                 getServiceMethod.setAccessible(true);
                 final Object iNotificationManagerObj = getServiceMethod.invoke(null);
-
-                Class iNotificationManagerCls = Class.forName("android.app.INotificationManager");
-                iNotificationManagerProxy = Proxy.newProxyInstance(toast.getClass().getClassLoader(), new Class[]{iNotificationManagerCls}, new InvocationHandler() {
+                iNotificationManagerProxy = Proxy.newProxyInstance(toast.getClass().getClassLoader(), new Class[]{Class.forName("android.app.INotificationManager")}, new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                         DUtil.log(method.getName());
                         if ("enqueueToast".equals(method.getName()) || "enqueueToastEx".equals(method.getName())//华为p20 pro上为enqueueToastEx
                                 || "cancelToast".equals(method.getName())
-                                ) {
+                        ) {
                             args[0] = "android";
                         }
                         return method.invoke(iNotificationManagerObj, args);
@@ -288,13 +264,4 @@ public class SystemToast implements IToast, Cloneable {
             }
         }
     }
-
-    /**
-     * 建议只在8.0和8.1版本下采用Hook INotificationManager的方案
-     * 因为8.0以下时DovaToast可以完美处理，而9.0及以上时Android不允许使用非公开api
-     */
-    public static boolean isValid4HookINotificationManager() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
-    }
-
 }

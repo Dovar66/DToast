@@ -9,7 +9,7 @@ import android.os.Message;
  * @Description:
  */
 class SafelyHandlerWrapper extends Handler {
-    private Handler impl;
+    private final Handler impl;
 
     public SafelyHandlerWrapper(Handler impl) {
         this.impl = impl;
@@ -20,6 +20,7 @@ class SafelyHandlerWrapper extends Handler {
         try {
             impl.dispatchMessage(msg);
         } catch (Exception e) {
+            //ignore
         }
     }
 

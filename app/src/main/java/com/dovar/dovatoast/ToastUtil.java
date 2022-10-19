@@ -17,9 +17,9 @@ public class ToastUtil {
     /**
      * 使用默认布局
      */
-    public static void show(Context mContext, String msg) {
-        if (mContext == null || msg == null) return;
-        DToast.make(mContext)
+    public static void show(String msg) {
+        if (msg == null) return;
+        DToast.make()
                 .setText(msg)
                 .setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 30)
                 .show();
@@ -29,17 +29,12 @@ public class ToastUtil {
     /**
      * 通过setView()设置自定义的Toast布局
      */
-    public static void showAtCenter(Context mContext, String msg) {
-        if (mContext == null || msg == null) return;
-        DToast.make(mContext)
-                .setView(View.inflate(mContext, R.layout.layout_toast_center, null))
+    public static void showAtCenter(String msg) {
+        if (msg == null) return;
+        DToast.make()
+                .setView(View.inflate(App.app, R.layout.layout_toast_center, null))
                 .setText(msg)
                 .setGravity(Gravity.CENTER, 0, 0)
                 .showLong();
-    }
-
-    //退出APP时调用
-    public static void cancelAll() {
-        DToast.cancel();
     }
 }
