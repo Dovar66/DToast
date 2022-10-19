@@ -209,18 +209,19 @@ public class SystemToast implements IToast, Cloneable {
 
     //捕获8.0之前Toast的BadTokenException，Google在Android 8.0的代码提交中修复了这个问题
     private static void hookHandler(Toast toast) {
-        if (toast == null || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) return;
-        try {
-            Field sField_TN = Toast.class.getDeclaredField("mTN");
-            sField_TN.setAccessible(true);
-            Field sField_TN_Handler = sField_TN.getType().getDeclaredField("mHandler");
-            sField_TN_Handler.setAccessible(true);
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.N_MR1) {
+            try {
+                Field sField_TN = Toast.class.getDeclaredField("mTN");
+                sField_TN.setAccessible(true);
+                Field sField_TN_Handler = sField_TN.getType().getDeclaredField("mHandler");
+                sField_TN_Handler.setAccessible(true);
 
-            Object tn = sField_TN.get(toast);
-            Handler preHandler = (Handler) sField_TN_Handler.get(tn);
-            sField_TN_Handler.set(tn, new SafelyHandlerWrapper(preHandler));
-        } catch (Exception e) {
-            e.printStackTrace();
+                Object tn = sField_TN.get(toast);
+                Handler preHandler = (Handler) sField_TN_Handler.get(tn);
+                sField_TN_Handler.set(tn, new SafelyHandlerWrapper(preHandler));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -232,10 +233,12 @@ public class SystemToast implements IToast, Cloneable {
      */
     private static void hookINotificationManager(Toast toast, @NonNull Context mContext) {
         if (toast == null) return;
+        if (iNotificationManagerProxy != null) return;//代理不为空说明之前已设置成功
+        //如果有通知权限，直接使用系统Toast
+        //白名单中的机型没有通知权限时系统Toast也能正常展示
         if (NotificationManagerCompat.from(mContext).areNotificationsEnabled() || DUtil.isWhiteList()) return;
         //android10开始被标记为私有api，禁止反射调用
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            if (iNotificationManagerProxy != null) return;//代理不为空说明之前已设置成功
             try {
                 //生成INotificationManager代理
                 Method getServiceMethod = Toast.class.getDeclaredMethod("getService");

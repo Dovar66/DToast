@@ -19,7 +19,7 @@ public class ToastUtil {
      */
     public static void show(String msg) {
         if (msg == null) return;
-        DToast.make()
+        DToast.make(App.app)
                 .setText(msg)
                 .setGravity(Gravity.BOTTOM | Gravity.CENTER, 0, 30)
                 .show();
@@ -31,7 +31,7 @@ public class ToastUtil {
      */
     public static void showAtCenter(String msg) {
         if (msg == null) return;
-        DToast.make()
+        DToast.make(App.app)
                 .setView(View.inflate(App.app, R.layout.layout_toast_center, null))
                 .setText(msg)
                 .setGravity(Gravity.CENTER, 0, 0)
